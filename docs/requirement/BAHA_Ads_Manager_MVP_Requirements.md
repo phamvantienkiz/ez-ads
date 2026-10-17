@@ -150,51 +150,89 @@ Một người đại diện BAHA thao tác trực tiếp trên ứng dụng tro
 
 Form tối thiểu gồm:
 
-| Trường | Bắt buộc | Ghi chú |
+| Trường | Bắt buộc | Ghi chú / Giá trị đã chốt |
 |---|---:|---|
-| Ad account | Có | Chọn từ danh sách đã tải |
-| Facebook Page | Có | Chọn từ danh sách đã tải |
-| Campaign name | Có | Tên dễ nhận biết |
-| Objective | Có | Chỉ hiển thị objective được luồng API MVP hỗ trợ |
-| Budget type | Có | Daily hoặc lifetime nếu objective/API hỗ trợ |
-| Budget amount | Có | Giá trị dương; xác nhận đơn vị tiền tệ |
-| Ad set name | Có | Có thể gợi ý từ campaign name |
-| Ad name | Có | Có thể gợi ý từ campaign name |
-| Primary text | Có | Nội dung chính |
-| Headline | Khuyến nghị | Tùy định dạng creative |
-| Destination URL | Có | URL hợp lệ, dùng HTTPS nếu phù hợp |
-| Image URL | Có nếu creative yêu cầu | URL ảnh công khai, truy cập được |
-| CTA | Có nếu định dạng yêu cầu | Chọn trong các CTA được hỗ trợ |
-| Status | Có | Mặc định `PAUSED` |
+| Ad account | Có | Chọn từ danh sách đã tải từ Meta API |
+| Facebook Page | Có | Chọn từ danh sách Page mà người dùng có quyền quản lý |
+| Campaign name | Có | Tên dễ nhận biết (VD: `Demo Product Traffic Campaign`) |
+| Objective | Có | **Cố định:** `OUTCOME_TRAFFIC` (Lưu lượng truy cập website) |
+| Budget type | Có | **Cố định:** `daily_budget` (Ngân sách hàng ngày đặt ở Ad Set) |
+| Budget amount | Có | Giá trị dương. Backend tự động định dạng theo `currency` của Ad Account (nhân 100 nếu USD/EUR; giữ nguyên số nguyên nếu VND) |
+| Ad set name | Có | Tên Ad Set (gợi ý tự động từ campaign name) |
+| Ad name | Có | Tên Ad (gợi ý tự động từ campaign name) |
+| Primary text | Có | Nội dung văn bản chính của bài quảng cáo |
+| Headline | Có | Tiêu đề hiển thị dưới ảnh (format Link Ad) |
+| Destination URL | Có | URL trang đích sản phẩm (bắt buộc định dạng URL hợp lệ, ưu tiên HTTPS) |
+| Image URL | Có | URL ảnh sản phẩm công khai. Backend gọi `POST /act_{ad_account_id}/adimages` lấy `image_hash` để tạo creative |
+| CTA | Có | **Cố định:** `LEARN_MORE` (Tìm hiểu thêm) |
+| Status | Có | **Mặc định:** `PAUSED` |
 
-Không xây form audience targeting phức tạp trong MVP. Nếu API yêu cầu targeting, sử dụng cấu hình tối thiểu hợp lệ và có giải thích trong UI; không tự ý đặt targeting nhạy cảm hoặc giả định cấu hình nào phù hợp với mọi chiến dịch.
+**Cấu hình Ad Set mặc định (Targeting & Optimization):**
+- **Vị trí địa lý:** Toàn quốc Việt Nam (`geo_locations: {"countries": ["VN"]}`).
+- **Độ tuổi:** 18 – 65 tuổi (`age_min: 18`, `age_max: 65`).
+- **Giới tính:** Tất cả (`genders: [1, 2]`).
+- **Optimization Goal:** `LINK_CLICKS` (Tối ưu số lượt click liên kết).
+- **Billing Event:** `IMPRESSIONS` (Tính phí theo lượt hiển thị).
+- **Bid Strategy:** `LOWEST_COST_WITHOUT_CAP` (Chi phí thấp nhất không giới hạn giá thầu).
+- *UI hiển thị nhãn tóm tắt rõ ràng cấu hình targeting tối thiểu này để người dùng nắm rõ trước khi xác nhận.*
 
 ### FR-05 — Preview và xác nhận
 
 Trước khi gọi API, hiển thị:
-- Tên campaign, objective và ad account.
+- Tên campaign, objective (`OUTCOME_TRAFFIC`) và ad account đang chọn.
 - Page được chọn.
-- Nội dung chính, headline, ảnh và URL đích.
-- Ngân sách, loại ngân sách và trạng thái ban đầu.
+- Nội dung chính, headline, ảnh xem trước và URL đích.
+- Ngân sách hàng ngày, loại tiền tệ và trạng thái ban đầu (`PAUSED`).
+- Tóm tắt đối tượng: Toàn quốc Việt Nam, 18-65 tuổi.
 - Cảnh báo về chi phí nếu có thao tác bật phân phối.
 
 Người dùng phải nhấn nút xác nhận rõ ràng để gửi yêu cầu tạo quảng cáo.
 
 ### FR-06 — Tạo quảng cáo bằng Meta Marketing API
 
-Backend chịu trách nhiệm thực hiện các request. Không gọi Marketing API trực tiếp từ trình duyệt.
+Backend chịu trách nhiệm thực hiện các request tuần tự theo đúng thứ tự tài nguyên của Meta Marketing API:
 
-Triển khai đúng thứ tự tài nguyên mà objective/format được chọn yêu cầu. Luồng thông thường có thể bao gồm:
-1. Campaign.
-2. Ad Set với ngân sách, lịch chạy và targeting hợp lệ.
-3. Ad Creative.
-4. Ad.
-
-Tên endpoint, trường bắt buộc, phiên bản API và yêu cầu quyền phải được kiểm tra theo tài liệu Meta hiện hành. Không đoán tên field hoặc giả định mọi objective dùng chung một payload.
+1. **Upload / Hash hình ảnh:**
+   - Endpoint: `POST https://graph.facebook.com/{version}/act_{ad_account_id}/adimages`
+   - Payload: `url={image_url}`
+   - Nhận về: `images[image_url].hash` (lưu lại làm `image_hash`).
+2. **Tạo Campaign:**
+   - Endpoint: `POST https://graph.facebook.com/{version}/act_{ad_account_id}/campaigns`
+   - Payload: `name={campaign_name}`, `objective=OUTCOME_TRAFFIC`, `status=PAUSED`, `special_ad_categories=[]`.
+   - Nhận về: `campaign_id`.
+3. **Tạo Ad Set:**
+   - Endpoint: `POST https://graph.facebook.com/{version}/act_{ad_account_id}/adsets`
+   - Payload: `name={adset_name}`, `campaign_id={campaign_id}`, `daily_budget={formatted_budget}`, `billing_event=IMPRESSIONS`, `optimization_goal=LINK_CLICKS`, `bid_strategy=LOWEST_COST_WITHOUT_CAP`, `targeting={"geo_locations": {"countries": ["VN"]}, "age_min": 18, "age_max": 65}`, `status=PAUSED`.
+   - Nhận về: `adset_id`.
+4. **Tạo Ad Creative:**
+   - Endpoint: `POST https://graph.facebook.com/{version}/act_{ad_account_id}/adcreatives`
+   - Payload:
+     ```json
+     {
+       "name": "{ad_name} Creative",
+       "object_story_spec": {
+         "page_id": "{page_id}",
+         "link_data": {
+           "link": "{destination_url}",
+           "message": "{primary_text}",
+           "name": "{headline}",
+           "image_hash": "{image_hash}",
+           "call_to_action": {
+             "type": "LEARN_MORE"
+           }
+         }
+       }
+     }
+     ```
+   - Nhận về: `creative_id`.
+5. **Tạo Ad:**
+   - Endpoint: `POST https://graph.facebook.com/{version}/act_{ad_account_id}/ads`
+   - Payload: `name={ad_name}`, `adset_id={adset_id}`, `creative={"creative_id": "{creative_id}"}`, `status=PAUSED`.
+   - Nhận về: `ad_id`.
 
 - Sử dụng ad account đã được chọn và xác minh.
-- Gửi status `PAUSED` theo mặc định nếu được hỗ trợ.
-- Lưu ID và status trả về cho từng tài nguyên đã tạo.
+- Gửi status `PAUSED` theo mặc định.
+- Lưu ID và status trả về cho từng tài nguyên đã tạo vào bảng `ad_creation_runs`.
 - Nếu một bước thất bại sau khi các bước trước đã thành công, hiển thị tài nguyên nào đã được tạo và bước nào thất bại; không báo thành công toàn bộ.
 - Trả thông báo lỗi Meta có chọn lọc, loại bỏ token/secret và dữ liệu nhạy cảm khỏi nội dung lỗi.
 - Không giả lập thành công khi API lỗi hoặc chưa được cấu hình.
@@ -300,9 +338,20 @@ Không trả raw exception hoặc token về frontend.
 
 ## 9. SQLite — dữ liệu tối thiểu
 
-Không thiết kế schema quá mức. Chỉ tạo bảng nếu ứng dụng thực sự cần lưu dữ liệu qua lần tải lại.
+Không thiết kế schema quá mức. Chỉ tạo 2 bảng phục vụ trực tiếp cho phiên demo:
 
-### Bảng `ad_creation_runs` (đề xuất)
+### Bảng `meta_sessions` (lưu phiên OAuth đơn giản)
+
+- `id`: integer primary key (luôn cố định id=1 cho phiên người dùng hiện tại).
+- `access_token`: text (token lấy từ OAuth code exchange).
+- `token_type`: text (thường là `bearer`).
+- `expires_at`: integer/timestamp (thời điểm hết hạn token).
+- `created_at`: timestamp.
+- `updated_at`: timestamp.
+
+*Mục đích:* Duy trì trạng thái đã kết nối khi reload frontend hoặc restart backend uvicorn, loại bỏ rủi ro mất phiên làm gián đoạn buổi demo.
+
+### Bảng `ad_creation_runs` (lịch sử tạo quảng cáo & kiểm chứng)
 
 - `id`: primary key.
 - `ad_account_id`: ID tài khoản Meta.
@@ -316,7 +365,7 @@ Không thiết kế schema quá mức. Chỉ tạo bảng nếu ứng dụng th�
 - `error_message`: thông báo đã làm sạch.
 - `created_at`: timestamp.
 
-Không cần lưu toàn bộ dữ liệu Meta trừ khi phục vụ trực tiếp cho demo. Nếu deadline quá gấp, có thể ưu tiên hoàn thiện luồng tạo quảng cáo và dùng SQLite cho log kết quả tối thiểu hoặc bỏ persistence không thiết yếu, nhưng phải nêu rõ trong README.
+Không cần lưu toàn bộ dữ liệu Meta trừ khi phục vụ trực tiếp cho demo.
 
 ## 10. Cấu hình môi trường
 
@@ -326,16 +375,16 @@ Tạo `.env.example` với các biến phù hợp, tối thiểu:
 META_APP_ID=
 META_APP_SECRET=
 META_REDIRECT_URI=http://localhost:8000/api/meta/callback
-META_API_VERSION=
+META_API_VERSION=v20.0
 FRONTEND_URL=http://localhost:3000
 DATABASE_URL=sqlite:///./baha_ads_manager.db
 ```
 
-- Kiểm tra callback URI có khớp chính xác cấu hình trong Meta App hay không.
-- Phiên bản API phải được chọn từ tài liệu Meta hiện hành, không dùng giá trị bịa.
-- Không commit `.env`.
-- Nếu cần tunnel/HTTPS cho OAuth callback, ghi rõ cách cấu hình trong README.
-- Không coi `.env.example` là nơi điền credentials thật.
+- **Meta App Configuration:** Sử dụng Meta App ở chế độ Development Mode. Thêm tài khoản Facebook cá nhân làm Admin/Developer/Tester trong Meta App.
+- **Valid OAuth Redirect URIs:** Cấu hình chính xác `http://localhost:8000/api/meta/callback` trong mục *Facebook Login > Settings*.
+- **OAuth Scopes cần xin:** `ads_management`, `ads_read`, `pages_read_engagement`, `pages_manage_ads`, `public_profile`.
+- **Phiên bản API:** `v20.0`.
+- Không commit file `.env` chứa token/secret thật lên Git.
 
 ## 11. Error handling và các rủi ro trọng yếu
 
@@ -509,3 +558,19 @@ Dùng prompt dưới đây làm chỉ dẫn ban đầu; sau đó giao từng pha
 ## Nguyên tắc quyết định
 
 Trong giới hạn 2 giờ, **một luồng thật chạy được tốt hơn một dashboard đẹp nhưng không thể tạo quảng cáo**. Điểm rủi ro lớn nhất không phải Next.js, FastAPI hay SQLite, mà là Meta App, OAuth, quyền quảng cáo, quyền Page và điều kiện của ad account. Xác minh các điều kiện này ngay từ đầu; nếu chúng chưa sẵn sàng, phải báo rõ blocker thay vì dùng dữ liệu giả để tạo ấn tượng rằng quảng cáo đã được đăng.
+
+---
+
+## 18. Quyết định kỹ thuật chốt cho MVP (Technical Decisions Log)
+
+Biên bản các quyết định kỹ thuật đã thống nhất qua phiên phỏng vấn Grill-Me ngày 17/10/2026:
+
+| # | Hạng mục quyết định | Nội dung đã chốt | Rationale / Lý do kỹ thuật |
+|---|---|---|---|
+| **D-01** | **Campaign Objective & Ad Format** | `OUTCOME_TRAFFIC` (Website Traffic) với định dạng **Single Image Link Ad** (ảnh đơn + headline + link trang đích + nút CTA `LEARN_MORE`). Trạng thái ban đầu: `PAUSED`. | Payload tiêu chuẩn, tài liệu rõ ràng, không phụ thuộc Meta Pixel hay Product Catalog, phù hợp nhất để demo trong 2 giờ. |
+| **D-02** | **Xử lý hình ảnh sản phẩm (Creative)** | Người dùng nhập **Image URL công khai** vào form; backend gọi `POST /act_{id}/adimages` với tham số `url` để Meta tự tải ảnh và trả về `image_hash`. | Bám sát FR-04, tránh phức tạp hóa việc xử lý upload file multipart trên frontend trong thời gian gấp. |
+| **D-03** | **Cấu hình Ad Set mặc định** | Cố định targeting tối thiểu: **Toàn quốc Việt Nam (VN), độ tuổi 18–65, all genders**. `optimization_goal='LINK_CLICKS'`, `billing_event='IMPRESSIONS'`, `bid_strategy='LOWEST_COST_WITHOUT_CAP'`. | Đáp ứng điều kiện bắt buộc của Meta API khi tạo Ad Set mà không làm phình UI bằng form targeting phức tạp. |
+| **D-04** | **Meta App & OAuth Redirect** | Sử dụng Meta App ở chế độ **Development Mode**, Redirect URI là `http://localhost:8000/api/meta/callback` chạy trực tiếp localhost (không cần ngrok tunnel). Tài khoản demo được gán quyền Tester/Admin trên App. | Đơn giản hóa môi trường chạy demo cục bộ. |
+| **D-05** | **Quản lý Access Token** | Lưu token vào bảng SQLite đơn giản `meta_sessions` (1 record duy nhất). | Duy trì trạng thái kết nối khi F5 trình duyệt hoặc reload backend, không bắt người dùng phải đăng nhập lại. |
+| **D-06** | **Quy đổi Ngân sách (Currency)** | Backend tự động lấy `currency` từ Ad Account Meta: nhân 100 với các đồng tiền có đơn vị cent (USD, EUR,...); giữ nguyên số nguyên đối với đồng tiền không có số thập phân (VND, JPY). | Đảm bảo đúng chuẩn quy đổi ngân sách của Meta Marketing API mà người dùng không cần tính toán thủ công. |
+
