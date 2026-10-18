@@ -289,5 +289,78 @@ class AdCreationService:
                 },
             }
 
+    async def execute_page_post_fallback(
+        self,
+        request: AdCreationRequest,
+    ) -> dict[str, Any]:
+        """Publish a regular post directly to Fanpage as a fallback when Ads creation is restricted."""
+        if self._lock.locked():
+            raise DoubleSubmitLockedError()
+
+        async with self._lock:
+            token = await self.session_repo.get_access_token()
+            if not token:
+                raise SessionNotFoundError()
+
+            summary = {
+                "mode": "page_post_fallback",
+                "campaign_name": request.campaign_name,
+                "headline": request.headline,
+                "destination_url": request.destination_url,
+                "image_url": request.image_url,
+            }
+            run_id = await self.run_repo.create_run(
+                ad_account_id=request.ad_account_id or "act_page_post",
+                page_id=request.page_id,
+                status="pending",
+                request_summary=json.dumps(summary, ensure_ascii=False),
+            )
+
+            try:
+                post_result = await self.client.publish_page_post(
+                    token=token,
+                    page_id=request.page_id,
+                    message=request.primary_text,
+                    link=request.destination_url,
+                    image_url=request.image_url,
+                    headline=request.headline,
+                )
+                post_id = post_result.get("post_id", "")
+                await self.run_repo.update_run(
+                    run_id=run_id,
+                    creative_id=post_id,
+                    ad_id=post_id,
+                    status="success",
+                )
+                return {
+                    "run_id": run_id,
+                    "status": "success",
+                    "ad_account_id": request.ad_account_id or "act_page_post",
+                    "page_id": request.page_id,
+                    "resources": {
+                        "image_hash": "direct_page_photo",
+                        "campaign_id": "page_post_mode",
+                        "adset_id": "page_post_mode",
+                        "creative_id": post_id,
+                        "ad_id": post_id,
+                    },
+                    "configuration": {
+                        "objective": "PAGE_POST_PUBLISHED",
+                        "status": "PUBLISHED",
+                        "cta": "LEARN_MORE",
+                    },
+                }
+            except (MetaApiError, Exception) as exc:
+                err_msg = sanitize_meta_error(str(exc))
+                await self.run_repo.update_run(
+                    run_id=run_id,
+                    status="failed",
+                    error_message=f"Lỗi đăng bài Fanpage: {err_msg}",
+                )
+                raise MetaApiError(
+                    code="META_PAGE_POST_FAILED",
+                    message=f"Không thể đăng bài lên Fanpage: {err_msg}",
+                ) from exc
+
 
 ad_service = AdCreationService()

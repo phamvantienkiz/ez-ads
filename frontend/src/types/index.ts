@@ -30,6 +30,8 @@ export interface MetaSessionStatus {
   tokenType?: string;
   hasToken: boolean;
   updatedAt?: string;
+  appIdConfigured?: boolean;
+  currentAppId?: string | null;
 }
 
 export interface AdAccount {

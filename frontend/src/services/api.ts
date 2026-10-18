@@ -80,8 +80,19 @@ export const api = {
   // 1. Health check
   getHealth: () => request<HealthCheck>('/health'),
 
-  // 2. Meta OAuth
-  getMetaConnectUrl: () => request<{ authUrl: string }>('/meta/connect'),
+  // 2. Meta OAuth (supports Implicit Flow with only App ID & direct token callback)
+  getMetaConnectUrl: (appId?: string, scopeMode?: string) => {
+    const params = new URLSearchParams();
+    if (appId && appId.trim()) params.set('app_id', appId.trim());
+    if (scopeMode) params.set('scope_mode', scopeMode);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request<{ authUrl: string; appIdConfigured?: boolean; currentAppId?: string | null }>(`/meta/connect${qs}`);
+  },
+  saveTokenCallback: (accessToken: string, state?: string, expiresIn?: number) =>
+    request<{ connected: boolean; tokenType?: string; hasToken: boolean }>('/meta/token-callback', {
+      method: 'POST',
+      body: JSON.stringify({ accessToken, state, expiresIn }),
+    }),
   getMetaStatus: () => request<MetaSessionStatus>('/meta/status'),
   disconnectMeta: () => request<{ connected: boolean }>('/meta/disconnect', { method: 'POST' }),
 
@@ -95,6 +106,12 @@ export const api = {
 
   createAd: (payload: CreateAdPayload) =>
     request<AdCreationResult>('/ads', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  publishPagePost: (payload: CreateAdPayload) =>
+    request<AdCreationResult>('/ads/page-post', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

@@ -7,19 +7,23 @@ import { ShieldCheck, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 interface AdFormProps {
   initialValues: CreateAdPayload;
   selectedAccount?: AdAccount;
+  selectedPageId?: string;
   isSubmitting: boolean;
   errorMessage?: string | null;
   onChange: (values: CreateAdPayload) => void;
   onSubmit: (values: CreateAdPayload) => void;
+  onPublishPagePost?: (values: CreateAdPayload) => void;
 }
 
 export function AdForm({
   initialValues,
   selectedAccount,
+  selectedPageId,
   isSubmitting,
   errorMessage,
   onChange,
   onSubmit,
+  onPublishPagePost,
 }: AdFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -62,6 +66,25 @@ export function AdForm({
 
     setValidationError(null);
     onSubmit(initialValues);
+  };
+
+  const handlePagePostClick = () => {
+    if (!initialValues.headline.trim()) {
+      setValidationError('Vui lòng nhập tiêu đề bài viết.');
+      return;
+    }
+    if (!initialValues.primaryText.trim()) {
+      setValidationError('Vui lòng nhập nội dung chính của bài viết.');
+      return;
+    }
+    if (!initialValues.destinationUrl.trim().startsWith('http')) {
+      setValidationError('URL trang đích phải bắt đầu bằng http:// hoặc https://');
+      return;
+    }
+    setValidationError(null);
+    if (onPublishPagePost) {
+      onPublishPagePost(initialValues);
+    }
   };
 
   return (
@@ -221,23 +244,36 @@ export function AdForm({
       </div>
 
       {/* Submit Primary Ink Button */}
-      <button
-        type="submit"
-        disabled={isSubmitting || !selectedAccount}
-        className="w-full bg-ink hover:bg-black text-white text-[14px] font-medium py-3.5 px-6 rounded-xl shadow-primary transition-all duration-150 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin text-white" />
-            <span>Đang thực thi chuỗi 5 bước trên Meta Marketing API...</span>
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4 text-white" />
-            <span>Xác nhận tạo quảng cáo trên Meta</span>
-          </>
+      <div className="flex flex-col gap-2.5 mt-2">
+        <button
+          type="submit"
+          disabled={isSubmitting || !selectedAccount}
+          className="w-full bg-ink hover:bg-black text-white text-[14px] font-medium py-3.5 px-6 rounded-xl shadow-primary transition-all duration-150 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+              <span>Đang thực thi trên Meta API...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 text-white" />
+              <span>Xác nhận tạo quảng cáo trên Meta (5 bước)</span>
+            </>
+          )}
+        </button>
+
+        {onPublishPagePost && (
+          <button
+            type="button"
+            onClick={handlePagePostClick}
+            disabled={isSubmitting || (!selectedPageId && !initialValues.pageId)}
+            className="w-full bg-subtle hover:bg-[#E5E5EA] text-primary text-[13px] font-medium py-2.5 px-4 rounded-xl border border-border-card transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <span>Dự phòng Demo: Đăng bài Post trực tiếp lên Fanpage (Không qua trình quản lý Ads)</span>
+          </button>
         )}
-      </button>
+      </div>
     </form>
   );
 }

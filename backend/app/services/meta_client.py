@@ -392,5 +392,58 @@ class MetaClientService:
         except httpx.TimeoutException as exc:
             raise MetaTimeoutError() from exc
 
+    async def publish_page_post(
+        self,
+        token: str,
+        page_id: str,
+        message: str,
+        link: str,
+        image_url: str | None = None,
+        headline: str | None = None,
+    ) -> dict[str, Any]:
+        """Fallback: Publish a regular post with photo/link directly to the selected Facebook Page."""
+        accounts_url = f"{self.base_url}/me/accounts"
+        headers = {"Authorization": f"Bearer {token}"}
+        params = {"fields": "id,name,access_token", "limit": 100}
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                acc_resp = await client.get(accounts_url, headers=headers, params=params)
+                page_token = token
+                if acc_resp.is_success:
+                    pages_data = acc_resp.json().get("data", [])
+                    for p in pages_data:
+                        if str(p.get("id")) == str(page_id) and p.get("access_token"):
+                            page_token = p["access_token"]
+                            break
+
+                full_caption = f"{headline}\n\n{message}\n\n👉 Xem chi tiết: {link}" if headline else f"{message}\n\n👉 {link}"
+                page_headers = {"Authorization": f"Bearer {page_token}"}
+
+                if image_url:
+                    photo_url = f"{self.base_url}/{page_id}/photos"
+                    photo_resp = await client.post(
+                        photo_url,
+                        headers=page_headers,
+                        data={"url": image_url, "caption": full_caption, "published": "true"},
+                    )
+                    if photo_resp.is_success:
+                        resp_data = photo_resp.json()
+                        post_id = str(resp_data.get("post_id") or resp_data.get("id", ""))
+                        return {"post_id": post_id, "type": "photo_post"}
+
+                feed_url = f"{self.base_url}/{page_id}/feed"
+                feed_resp = await client.post(
+                    feed_url,
+                    headers=page_headers,
+                    data={"message": full_caption, "link": link, "published": "true"},
+                )
+                if not feed_resp.is_success:
+                    raise self._parse_error(feed_resp)
+                resp_data = feed_resp.json()
+                return {"post_id": str(resp_data.get("id", "")), "type": "feed_post"}
+        except httpx.TimeoutException as exc:
+            raise MetaTimeoutError() from exc
+
 
 meta_client = MetaClientService()

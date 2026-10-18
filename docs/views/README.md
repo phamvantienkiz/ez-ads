@@ -20,4 +20,7 @@ Thư mục `docs/views/` là nơi lưu trữ tập trung các tệp **HTML trự
 
 ## 3. Danh mục Hiện tại
 
-*(Hiện tại chưa có tệp HTML view nào được yêu cầu khởi tạo cho Release 1 MVP Demo — toàn bộ sơ đồ hệ thống đang được nhúng trực tiếp bằng chuẩn Mermaid trong các tài liệu Markdown gốc).*
+| Tệp View | Mô tả Nội dung | Phong cách Thiết kế | Nguồn Dữ liệu Gốc |
+| :--- | :--- | :--- | :--- |
+| [`mvp-showcase.html`](file:///E:/MyProject/BAHA/docs/views/mvp-showcase.html) | Trang thuyết trình & sơ đồ kiến trúc tương tác tổng kết quá trình xây dựng MVP trong 2 giờ (Từ phân tích yêu cầu, chốt 6 quyết định kỹ thuật, lựa chọn Tech Stack, System Design 3 tầng đến giải pháp kết nối thực tế Meta API). | **Soft Clean Cards** (`#F3F3F5`, Card trắng bo góc `28px`, hỗ trợ chuyển Slide bằng phím `←` `→` hoặc xem toàn trang). | `docs/requirement/`, `docs/architecture/`, `docs/implementation/release-1/` |
+

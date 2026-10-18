@@ -160,9 +160,29 @@ export default function Home() {
     }
   }, []);
 
-  // On Mount: Parse URL params & load state
+  // On Mount: Parse URL params / hash fragment & load state
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const hashToken = hashParams.get('access_token');
+
+    if (hashToken) {
+      const hashState = hashParams.get('state') || undefined;
+      const hashExpires = hashParams.get('expires_in') ? Number(hashParams.get('expires_in')) : undefined;
+      window.history.replaceState({}, document.title, window.location.pathname);
+      api
+        .saveTokenCallback(hashToken, hashState, hashExpires)
+        .then(() => {
+          setGlobalSuccess('Kết nối tài khoản Meta (OAuth Implicit Flow) thành công!');
+          checkHealthAndSession();
+        })
+        .catch((err) => {
+          setGlobalError(err?.message || 'Không thể lưu Access Token từ Meta.');
+        });
+      fetchLatestRun();
+      return;
+    }
+
     if (urlParams.get('connected') === 'true') {
       setGlobalSuccess('Kết nối tài khoản Meta thành công!');
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -197,19 +217,45 @@ export default function Home() {
     }
   }, [selectedPageId]);
 
-  // Handlers: OAuth Connect / Disconnect
-  const handleConnectFacebook = async () => {
+  // Handlers: OAuth Connect / Direct Token / Disconnect
+  const handleConnectFacebook = async (appIdOverride?: string) => {
     setIsLoadingAuth(true);
     setGlobalError(null);
+    const resolvedAppId =
+      appIdOverride ||
+      (typeof window !== 'undefined' ? window.localStorage.getItem('baha_meta_app_id') || undefined : undefined);
+
     try {
-      const res = await api.getMetaConnectUrl();
+      const res = await api.getMetaConnectUrl(resolvedAppId);
       if (res.success && res.data?.authUrl) {
+        if (res.data.appIdConfigured === false) {
+          setGlobalError(
+            'Chưa có Meta App ID hợp lệ! Vui lòng dán mã số App ID của tài khoản BAHA vào ô "Nhập Meta App ID" bên dưới rồi bấm Connect Facebook ngay.'
+          );
+          return;
+        }
         window.location.href = res.data.authUrl;
       } else {
         setGlobalError('Không thể khởi tạo URL xác thực Meta.');
       }
     } catch (err: any) {
       setGlobalError(err?.message || 'Lỗi khi gọi API kết nối Meta.');
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
+
+  const handleDirectTokenSubmit = async (accessToken: string) => {
+    setIsLoadingAuth(true);
+    setGlobalError(null);
+    try {
+      const res = await api.saveTokenCallback(accessToken);
+      if (res.success) {
+        setGlobalSuccess('Đã lưu Access Token và kết nối tài khoản Meta thành công!');
+        await checkHealthAndSession();
+      }
+    } catch (err: any) {
+      setGlobalError(err?.message || 'Lỗi khi lưu Access Token trực tiếp.');
     } finally {
       setIsLoadingAuth(false);
     }
@@ -270,6 +316,37 @@ export default function Home() {
       } else {
         setGlobalError(err?.message || 'Đã có lỗi xảy ra khi tạo quảng cáo.');
       }
+    } finally {
+      setIsSubmittingAd(false);
+    }
+  };
+
+  // Handler: Fallback Page Post Submit
+  const handlePublishPagePost = async (payload: CreateAdPayload) => {
+    if (!selectedPageId) {
+      setGlobalError('Vui lòng chọn một Fanpage trước khi đăng bài.');
+      return;
+    }
+
+    setIsSubmittingAd(true);
+    setGlobalError(null);
+    setGlobalSuccess(null);
+
+    const submissionPayload: CreateAdPayload = {
+      ...payload,
+      adAccountId: selectedAccountId || 'act_page_post',
+      pageId: selectedPageId,
+    };
+
+    try {
+      const res = await api.publishPagePost(submissionPayload);
+      if (res.success && res.data) {
+        setCreationResult(res.data);
+        setGlobalSuccess('Đăng bài viết trực tiếp lên Fanpage thành công!');
+        fetchLatestRun();
+      }
+    } catch (err: any) {
+      setGlobalError(err?.message || 'Đã có lỗi xảy ra khi đăng bài lên Fanpage.');
     } finally {
       setIsSubmittingAd(false);
     }
@@ -355,7 +432,9 @@ export default function Home() {
             <ConnectCard
               connected={metaStatus.connected}
               isLoading={isLoadingAuth}
+              currentAppId={metaStatus.currentAppId}
               onConnect={handleConnectFacebook}
+              onDirectTokenSubmit={handleDirectTokenSubmit}
               onSelectTab={setActiveTab}
             />
           )}
@@ -514,10 +593,12 @@ export default function Home() {
               <AdForm
                 initialValues={formData}
                 selectedAccount={selectedAccount}
+                selectedPageId={selectedPageId}
                 isSubmitting={isSubmittingAd}
                 errorMessage={globalError}
                 onChange={setFormData}
                 onSubmit={handleCreateAd}
+                onPublishPagePost={handlePublishPagePost}
               />
             </div>
 

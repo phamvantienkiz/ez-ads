@@ -179,6 +179,60 @@ async def create_ad(
         )
 
 
+@ads_router.post(
+    "/page-post",
+    response_model=SuccessResponse[AdCreationData],
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_page_post(
+    request: Request,
+    body: AdCreationRequest,
+    request_id: Annotated[str, Depends(get_request_id)],
+    ad_service: Annotated[AdCreationService, Depends(get_ad_service)],
+) -> Any:
+    """Fallback endpoint: Publish a regular post directly to the selected Fanpage."""
+    try:
+        result = await ad_service.execute_page_post_fallback(body)
+        creation_data = AdCreationData(
+            run_id=result["run_id"],
+            status=result["status"],
+            ad_account_id=result["ad_account_id"],
+            page_id=result["page_id"],
+            resources=AdResources(**result["resources"]),
+            configuration=result.get("configuration"),
+        )
+        return SuccessResponse[AdCreationData](
+            success=True,
+            status_code=status.HTTP_201_CREATED,
+            message="Đăng bài viết trực tiếp lên Fanpage thành công!",
+            data=creation_data,
+            meta=ResponseMeta(request_id=request_id),
+        )
+    except SessionNotFoundError as exc:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content=ErrorResponse(
+                success=False,
+                status_code=401,
+                message=exc.message,
+                error=ErrorDetail(code="SESSION_NOT_FOUND", message=exc.message),
+                meta=ResponseMeta(request_id=request_id),
+            ).model_dump(by_alias=True),
+        )
+    except MetaApiError as exc:
+        logger.error("[%s] Meta Page Post failure: %s", request_id, exc.message)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ErrorResponse(
+                success=False,
+                status_code=400,
+                message=exc.message,
+                error=ErrorDetail(code=exc.code, message=exc.message),
+                meta=ResponseMeta(request_id=request_id),
+            ).model_dump(by_alias=True),
+        )
+
+
 # =============================================================================
 # Run History Endpoints
 # =============================================================================
