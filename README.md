@@ -71,10 +71,10 @@ flowchart TB
         MetaGraph["🌐 Meta Graph & Marketing API v20.0<br/>(https://graph.facebook.com/v20.0)"]
     end
 
-    UI <-->|RESTful JSON / CORS Envelope| FastAPI
-    Repo <-->|aiosqlite / Async SQL| DB
-    Service <-->|HTTPS OAuth Exchange| MetaAuth
-    Service <-->|HTTPS Bearer Token (v20.0 Calls)| MetaGraph
+    UI <-->|"RESTful JSON / CORS Envelope"| FastAPI
+    Repo <-->|"aiosqlite / Async SQL"| DB
+    Service <-->|"HTTPS OAuth Exchange"| MetaAuth
+    Service <-->|"HTTPS Bearer Token (v20.0 Calls)"| MetaGraph
 ```
 
 ---
