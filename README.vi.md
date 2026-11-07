@@ -1,4 +1,4 @@
-# BAHA Ads Manager
+# EZ-Ads Manager
 
 <div align="center">
 
@@ -24,7 +24,7 @@
 
 ## 1. Tổng quan dự án
 
-**BAHA Ads Manager** là giải pháp phần mềm chuyên biệt phục vụ việc kết nối trực tiếp tài khoản Meta/Facebook, lựa chọn tài khoản quảng cáo và Fanpage, tự động điều phối chuỗi tạo quảng cáo sản phẩm thông qua **Meta Marketing API chính thức (v20.0)**, đồng thời hiển thị và kiểm chứng kết quả thực tế trên giao diện trực quan.
+**EZ-Ads Manager** là giải pháp phần mềm chuyên biệt phục vụ việc kết nối trực tiếp tài khoản Meta/Facebook, lựa chọn tài khoản quảng cáo và Fanpage, tự động điều phối chuỗi tạo quảng cáo sản phẩm thông qua **Meta Marketing API chính thức (v20.0)**, đồng thời hiển thị và kiểm chứng kết quả thực tế trên giao diện trực quan.
 
 ### 🎯 Mục tiêu cốt lõi
 - **Tốc độ & Thực chiến**: Hoàn thiện toàn bộ luồng nghiệp vụ end-to-end có thể demo thực tế trong khoảng **2 giờ**.
@@ -41,78 +41,27 @@ Hệ thống được tổ chức theo mô hình **Client-Server 2 tầng tối 
 
 ### 2.1. Sơ đồ kiến trúc tổng thể (High-Level Topology)
 
-```mermaid
-flowchart TB
-    subgraph ClientTier ["1. Client Tier (Trình duyệt Web)"]
-        UI["🖥️ Next.js 14 Single Page App<br/>(React 18 + TypeScript + Tailwind CSS)<br/>Port: 3000"]
-    end
+<div align="center">
+  <img src="docs/assets/high-level-topology.svg" alt="EZ-Ads Manager - Sơ đồ kiến trúc tổng quan High-Level Topology (16:9)" width="100%" />
+</div>
 
-    subgraph ServerTier ["2. Application Server Tier (Local Server)"]
-        FastAPI["⚡ FastAPI Web Engine (Uvicorn ASGI)<br/>Port: 8000"]
-        
-        subgraph InternalModules ["Kiến trúc phân tầng Backend"]
-            Router["Tầng Router (HTTP / Pydantic V2)<br/>/api/v1/meta, /api/v1/ads, /api/v1/campaigns"]
-            Service["Tầng Service (Điều phối nghiệp vụ)<br/>MetaAuthService, MetaClientService, AdCreationService"]
-            Repo["Tầng Repository (Truy xuất dữ liệu)<br/>SessionRepository, RunRepository"]
-        end
-        
-        FastAPI --> Router
-        Router --> Service
-        Router --> Repo
-        Service --> Repo
-    end
+<details>
+<summary>🔍 Chi tiết các tầng kiến trúc trong sơ đồ</summary>
 
-    subgraph DataTier ["3. Data Tier (Cơ sở dữ liệu cục bộ)"]
-        DB[("💾 baha_ads_manager.db<br/>(SQLite 3 - Write-Ahead Logging WAL)")]
-    end
+- **Tầng 1 (Client Tier)**: Ứng dụng Next.js 14 Single-Page (cổng `3000`) xây dựng trên React 18, TypeScript và ngôn ngữ thiết kế Soft Clean Cards.
+- **Tầng 2 (Application Server Tier)**: Web Engine FastAPI (cổng `8000`) phân tầng chặt chẽ thành Router, Service (với khóa chống gửi trùng `asyncio.Lock`), và Repository.
+- **Tầng 3 (Data Persistence Tier)**: Cơ sở dữ liệu SQLite 3 WAL cục bộ (`meta_sessions` và `ad_creation_runs`) không phụ thuộc dịch vụ cơ sở dữ liệu ngoài.
+- **Tầng 4 (External Meta Cloud)**: Tương tác trực tiếp qua giao thức bảo mật với Meta OAuth 2.0 (Dual-mode) và Meta Marketing API chính thức (v20.0).
 
-    subgraph ExternalTier ["4. Meta Platforms Cloud"]
-        MetaAuth["🌐 Meta OAuth 2.0 Gateway<br/>(https://www.facebook.com/v20.0/dialog/oauth)"]
-        MetaGraph["🌐 Meta Graph & Marketing API v20.0<br/>(https://graph.facebook.com/v20.0)"]
-    end
-
-    UI <-->|"RESTful JSON / CORS Envelope"| FastAPI
-    Repo <-->|"aiosqlite / Async SQL"| DB
-    Service <-->|"HTTPS OAuth Exchange"| MetaAuth
-    Service <-->|"HTTPS Bearer Token (v20.0 Calls)"| MetaGraph
-```
+</details>
 
 ---
 
 ### 2.2. Sơ đồ luồng nghiệp vụ End-to-End
 
-```mermaid
-flowchart TD
-    Start([Bắt đầu phiên demo]) --> ConnectAuth[Người dùng chọn Kết nối Meta / Nhập Token]
-    ConnectAuth --> AuthChoice{Phương thức kết nối?}
-    
-    AuthChoice -- "OAuth 2.0 Code / Implicit" --> MetaDialog[Chuyển hướng xác thực trên Facebook]
-    MetaDialog --> CallbackHandling[Backend tiếp nhận Callback, verify CSRF state và lưu Token]
-    
-    AuthChoice -- "Direct Token Injection" --> GraphExplorer[Nạp Token nhanh từ Meta Graph Explorer]
-    GraphExplorer --> SaveDirectToken[Backend lưu Token vào bảng meta_sessions]
-    
-    CallbackHandling --> FetchAssets[Tự động tải danh sách Ad Accounts & Fanpages thật]
-    SaveDirectToken --> FetchAssets
-    
-    FetchAssets --> SelectAssets[Người dùng chọn 1 Ad Account & 1 Fanpage đại diện]
-    SelectAssets --> FillAdForm[Điền thông tin sản phẩm: URL ảnh, Tiêu đề, Link đích, Ngân sách]
-    FillAdForm --> PreviewVerify[Xem trước Ad Preview Card & Tóm tắt an toàn ngân sách]
-    
-    PreviewVerify --> SubmitAd{Xác nhận tạo quảng cáo?}
-    SubmitAd -- Chỉnh sửa --> FillAdForm
-    SubmitAd -- Bấm tạo --> ExecPipeline[Backend kích hoạt chuỗi 5 bước Meta Marketing API]
-    
-    ExecPipeline --> S1[1. Upload / Hash hình ảnh -> image_hash]
-    S1 --> S2[2. Tạo Campaign OUTCOME_TRAFFIC status: PAUSED]
-    S2 --> S3[3. Quy đổi tiền tệ & Tạo Ad Set status: PAUSED]
-    S3 --> S4[4. Tạo Ad Creative liên kết Fanpage và Ảnh]
-    S4 --> S5[5. Tạo Ad hoàn chỉnh status: PAUSED]
-    
-    S5 --> SaveResult[Lưu toàn bộ ID thật vào bảng ad_creation_runs]
-    SaveResult --> RenderUI[Giao diện hiển thị ID thật + Bảng quản lý chiến dịch]
-    RenderUI --> End([Kết thúc luồng thành công])
-```
+<div align="center">
+  <img src="docs/assets/end-to-end-workflow.svg" alt="EZ-Ads Manager - Sơ đồ luồng nghiệp vụ End-to-End Business Workflow (16:9)" width="100%" />
+</div>
 
 ---
 
@@ -120,60 +69,9 @@ flowchart TD
 
 Backend thực hiện chuỗi 5 lời gọi Meta Marketing API một cách tuần tự, ghi nhận chính xác trạng thái từng bước và đảm bảo cơ chế **Partial Failure**:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Demo Operator
-    participant UI as Next.js Client (:3000)
-    participant API as FastAPI Router (:8000)
-    participant AdSvc as AdCreationService
-    participant Meta as Meta Graph API (v20.0)
-    participant DB as SQLite (ad_creation_runs)
-
-    User->>UI: Bấm "Xác nhận tạo quảng cáo"
-    UI->>API: POST /api/v1/ads (Payload cấu hình)
-    API->>AdSvc: create_ad_pipeline(payload)
-    AdSvc->>DB: Ghi nhận bản ghi chạy (status: 'pending')
-
-    rect rgb(240, 248, 255)
-    Note over AdSvc, Meta: Bước 1: Upload & Băm ảnh sản phẩm
-    AdSvc->>Meta: POST /act_{id}/adimages (url={image_url})
-    Meta-->>AdSvc: {"images": {"{url}": {"hash": "image_hash_123"}}}
-    end
-
-    rect rgb(245, 255, 245)
-    Note over AdSvc, Meta: Bước 2: Tạo Campaign (OUTCOME_TRAFFIC)
-    AdSvc->>Meta: POST /act_{id}/campaigns (objective: OUTCOME_TRAFFIC, status: PAUSED)
-    Meta-->>AdSvc: {"id": "cmp_101"}
-    AdSvc->>DB: Cập nhật campaign_id = cmp_101
-    end
-
-    rect rgb(255, 250, 240)
-    Note over AdSvc, Meta: Bước 3: Tạo Ad Set (Quy đổi tiền tệ)
-    Note over AdSvc: format_meta_budget: VND/JPY số nguyên, USD/EUR x100
-    AdSvc->>Meta: POST /act_{id}/adsets (daily_budget, campaign_id, status: PAUSED)
-    Meta-->>AdSvc: {"id": "adset_202"}
-    AdSvc->>DB: Cập nhật adset_id = adset_202
-    end
-
-    rect rgb(255, 245, 255)
-    Note over AdSvc, Meta: Bước 4: Tạo Ad Creative
-    AdSvc->>Meta: POST /act_{id}/adcreatives (page_id, image_hash, link_data)
-    Meta-->>AdSvc: {"id": "cre_303"}
-    AdSvc->>DB: Cập nhật creative_id = cre_303
-    end
-
-    rect rgb(240, 255, 255)
-    Note over AdSvc, Meta: Bước 5: Tạo Ad hoàn chỉnh
-    AdSvc->>Meta: POST /act_{id}/ads (adset_id, creative_id, name, status: PAUSED)
-    Meta-->>AdSvc: {"id": "ad_404"}
-    AdSvc->>DB: Cập nhật ad_id = ad_404, status = 'success'
-    end
-
-    AdSvc-->>API: CreationResult (100% ID thật từ Meta)
-    API-->>UI: HTTP 201 Created (Consistent Envelope)
-    UI->>User: Hiển thị Panel kết quả thật kèm badge xanh lá
-```
+<div align="center">
+  <img src="docs/assets/sequential-creation-pipeline.svg" alt="EZ-Ads Manager - Sơ đồ tuần tự Chuỗi 5 Bước tạo Quảng cáo Meta (16:9)" width="100%" />
+</div>
 
 ---
 
@@ -181,31 +79,9 @@ sequenceDiagram
 
 Cơ sở dữ liệu SQLite cục bộ được tối giản thành **2 bảng độc lập**, tự động khởi tạo khi backend khởi động (Zero-Config DDL):
 
-```mermaid
-erDiagram
-    META_SESSIONS {
-        int id PK "Cố định id=1 cho phiên người dùng hiện tại"
-        text access_token "User Access Token từ Meta"
-        text token_type "Mặc định 'bearer'"
-        int expires_at "Timestamp hết hạn (nullable)"
-        datetime created_at "Thời điểm đăng nhập"
-        datetime updated_at "Thời điểm cập nhật"
-    }
-
-    AD_CREATION_RUNS {
-        int id PK "Tự tăng (Auto-increment)"
-        text ad_account_id "ID tài khoản Meta (vd: act_12345)"
-        text page_id "ID Facebook Page được chọn"
-        text campaign_id "ID Campaign thật từ Meta (nullable)"
-        text adset_id "ID Ad Set thật từ Meta (nullable)"
-        text creative_id "ID Creative thật từ Meta (nullable)"
-        text ad_id "ID Ad thật từ Meta (nullable)"
-        text status "Trạng thái: pending / success / partial_failure / failed"
-        text request_summary "JSON tóm tắt cấu hình form đã submit"
-        text error_message "Nội dung lỗi đã làm sạch nếu thất bại"
-        datetime created_at "Thời điểm thực thi"
-    }
-```
+<div align="center">
+  <img src="docs/assets/data-architecture-erd.svg" alt="EZ-Ads Manager - Sơ đồ thực thể dữ liệu ERD & Đặc tả Schema (16:9)" width="100%" />
+</div>
 
 ---
 
@@ -233,7 +109,7 @@ erDiagram
 Dự án tuân thủ nghiêm ngặt **Kiến trúc phân tầng 3 lớp (3-Layer Architecture)** và quy tắc bất biến về cô lập môi trường:
 
 ```
-E:\MyProject\BAHA\
+ez-ads-manager/
 ├── backend/                           # Ứng dụng Backend (FastAPI Python)
 │   ├── app/
 │   │   ├── api/v1/endpoints/          # API Routers (/health, /meta_auth, /meta_assets, /ads)
@@ -389,17 +265,17 @@ Dưới đây là các bước thao tác mẫu để hoàn tất luồng demo tr
 
 1. **Bước 1: Kết nối tài khoản Meta**
    - Truy cập `http://localhost:3000`. Hệ thống sẽ kiểm tra trạng thái backend và phiên làm việc.
-   - **Cách 1 (Nhanh nhất cho buổi demo live)**: Mở [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/), chọn ứng dụng của bạn, chọn các quyền: `ads_management`, `ads_read`, `pages_read_engagement`, `pages_manage_ads`, `public_profile`, nhấn **Generate Access Token**. Sau đó quay lại giao diện BAHA Ads Manager, nhấn **"Nạp token trực tiếp từ Graph API Explorer"**, dán chuỗi token bắt đầu bằng `EAAB...` và bấm **Lưu phiên**.
+   - **Cách 1 (Nhanh nhất cho buổi demo live)**: Mở [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/), chọn ứng dụng của bạn, chọn các quyền: `ads_management`, `ads_read`, `pages_read_engagement`, `pages_manage_ads`, `public_profile`, nhấn **Generate Access Token**. Sau đó quay lại giao diện EZ-Ads Manager, nhấn **"Nạp token trực tiếp từ Graph API Explorer"**, dán chuỗi token bắt đầu bằng `EAAB...` và bấm **Lưu phiên**.
    - **Cách 2 (OAuth chuẩn)**: Bấm nút **"Connect Facebook ngay"** để chuyển hướng sang Facebook Login và đồng ý cấp quyền.
 2. **Bước 2: Chọn Ad Account & Fanpage**
    - Sau khi kết nối thành công, hệ thống tự động tải danh sách tài khoản quảng cáo và Fanpage.
-   - Chọn tài khoản quảng cáo mục tiêu (ví dụ: `act_120210...`) và Fanpage đại diện thương hiệu (ví dụ: `BAHA Fashion`).
+   - Chọn tài khoản quảng cáo mục tiêu (ví dụ: `act_120210...`) và Fanpage đại diện thương hiệu (ví dụ: `EZ Store`).
 3. **Bước 3: Điền biểu mẫu quảng cáo sản phẩm**
    - Chuyển sang tab **"Tạo Quảng Cáo"**.
    - Điền các thông tin:
-     - **Tên chiến dịch**: `BAHA Áo Polo Thể Thao Mùa Hè 2026`
+     - **Tên chiến dịch**: `EZ-Ads Chiến Dịch Traffic Mùa Hè 2026`
      - **URL hình ảnh**: Đường dẫn ảnh sản phẩm công khai (ví dụ từ CDN hoặc trang bán lẻ).
-     - **URL trang đích**: Đường dẫn bài viết / sản phẩm (ví dụ: `https://baha.vn/san-pham/ao-polo`).
+     - **URL trang đích**: Đường dẫn bài viết / sản phẩm (ví dụ: `https://ezads.io/san-pham/demo`).
      - **Tiêu đề**: `Áo Polo Thoáng Khí Cao Cấp - Ưu Đãi 20% Hôm Nay`
      - **Văn bản chính**: `Chất liệu co giãn 4 chiều, kháng khuẩn và khử mùi vượt trội. Mua ngay để nhận ưu đãi!`
      - **Ngân sách ngày**: `100,000` (nếu tài khoản là VND) hoặc `10` (nếu tài khoản là USD).
@@ -574,5 +450,5 @@ Dự án được phân phối theo giấy phép mã nguồn mở **Apache Licen
 ---
 
 <div align="center">
-  <b>BAHA Ads Manager</b> — Được xây dựng với sự hỗ trợ của <b>Google Antigravity</b>
+  <b>EZ-Ads Manager</b> — Được xây dựng với sự hỗ trợ của <b>Google Antigravity</b>
 </div>

@@ -1,4 +1,4 @@
-# BAHA Ads Manager
+# EZ-Ads Manager
 
 <div align="center">
 
@@ -24,7 +24,7 @@
 
 ## 1. Project Overview
 
-**BAHA Ads Manager** is a dedicated full-stack web application designed to connect directly with Meta/Facebook, discover accessible Ad Accounts and Fanpages, and orchestrate automated product advertising creation through the **official Meta Marketing API (v20.0)**, delivering verified, authentic results in a clean, modern interface.
+**EZ-Ads Manager** is a dedicated full-stack web application designed to connect directly with Meta/Facebook, discover accessible Ad Accounts and Fanpages, and orchestrate automated product advertising creation through the **official Meta Marketing API (v20.0)**, delivering verified, authentic results in a clean, modern interface.
 
 ### 🎯 Core Mission & Invariants
 - **Rapid End-to-End Execution**: A fully functional, production-standard demonstration deliverable completed within a strict **2-hour** development scope.
@@ -41,78 +41,27 @@ The architecture adheres to a **minimalist 2-tier Client-Server pattern (Decoupl
 
 ### 2.1. High-Level Topology
 
-```mermaid
-flowchart TB
-    subgraph ClientTier ["1. Client Tier (Browser)"]
-        UI["🖥️ Next.js 14 Single Page App<br/>(React 18 + TypeScript + Tailwind CSS)<br/>Port: 3000"]
-    end
+<div align="center">
+  <img src="docs/assets/high-level-topology.svg" alt="EZ-Ads Manager - High-Level System Topology (16:9)" width="100%" />
+</div>
 
-    subgraph ServerTier ["2. Application Server Tier (Local Server)"]
-        FastAPI["⚡ FastAPI Web Engine (Uvicorn ASGI)<br/>Port: 8000"]
-        
-        subgraph InternalModules ["Layered Backend Architecture"]
-            Router["Router Layer (HTTP / Pydantic V2)<br/>/api/v1/meta, /api/v1/ads, /api/v1/campaigns"]
-            Service["Service Layer (Business Orchestration)<br/>MetaAuthService, MetaClientService, AdCreationService"]
-            Repo["Repository Layer (Data Access)<br/>SessionRepository, RunRepository"]
-        end
-        
-        FastAPI --> Router
-        Router --> Service
-        Router --> Repo
-        Service --> Repo
-    end
+<details>
+<summary>🔍 Click to view architectural breakdown notes</summary>
 
-    subgraph DataTier ["3. Data Tier (Local Persistence)"]
-        DB[("💾 baha_ads_manager.db<br/>(SQLite 3 - Write-Ahead Logging WAL)")]
-    end
+- **Tier 1 (Client)**: Next.js 14 Single-Page Application running on port `3000` with React 18, TypeScript, and Soft Clean Cards design system.
+- **Tier 2 (Application Server)**: FastAPI Web Engine on port `8000` structured cleanly into Router, Service, and Repository layers with anti-duplicate locking (`asyncio.Lock`).
+- **Tier 3 (Data Persistence)**: Local SQLite 3 WAL database (`meta_sessions` and `ad_creation_runs`) requiring zero external database daemons.
+- **Tier 4 (Meta Cloud)**: Direct integration with Meta OAuth 2.0 (Dual-mode) and official Meta Marketing API (v20.0).
 
-    subgraph ExternalTier ["4. Meta Platforms Cloud"]
-        MetaAuth["🌐 Meta OAuth 2.0 Gateway<br/>(https://www.facebook.com/v20.0/dialog/oauth)"]
-        MetaGraph["🌐 Meta Graph & Marketing API v20.0<br/>(https://graph.facebook.com/v20.0)"]
-    end
-
-    UI <-->|"RESTful JSON / CORS Envelope"| FastAPI
-    Repo <-->|"aiosqlite / Async SQL"| DB
-    Service <-->|"HTTPS OAuth Exchange"| MetaAuth
-    Service <-->|"HTTPS Bearer Token (v20.0 Calls)"| MetaGraph
-```
+</details>
 
 ---
 
 ### 2.2. End-to-End Business Workflow
 
-```mermaid
-flowchart TD
-    Start([Session Initialized]) --> ConnectAuth[User Selects Connection Method / Injects Token]
-    ConnectAuth --> AuthChoice{Connection Mode?}
-    
-    AuthChoice -- "OAuth 2.0 Code / Implicit" --> MetaDialog[Redirect to Facebook Authorization Dialog]
-    MetaDialog --> CallbackHandling[Backend captures callback, verifies CSRF state & stores Token]
-    
-    AuthChoice -- "Direct Token Injection" --> GraphExplorer[Rapid Token fetch from Meta Graph Explorer]
-    GraphExplorer --> SaveDirectToken[Backend saves token into meta_sessions table]
-    
-    CallbackHandling --> FetchAssets[Automatically query live Ad Accounts & Fanpages]
-    SaveDirectToken --> FetchAssets
-    
-    FetchAssets --> SelectAssets[User selects target Ad Account & Fanpage]
-    SelectAssets --> FillAdForm[Input product data: Image URL, Headline, Target Link, Budget]
-    FillAdForm --> PreviewVerify[Inspect Ad Preview Card & Safety Budget Summary]
-    
-    PreviewVerify --> SubmitAd{Confirm Ad Creation?}
-    SubmitAd -- Modify --> FillAdForm
-    SubmitAd -- Confirm --> ExecPipeline[Backend triggers sequential 5-step Meta Pipeline]
-    
-    ExecPipeline --> S1[1. Upload / Hash Image -> image_hash]
-    S1 --> S2[2. Create Campaign OUTCOME_TRAFFIC status: PAUSED]
-    S2 --> S3[3. Format Currency & Create Ad Set status: PAUSED]
-    S3 --> S4[4. Create Ad Creative linking Page and Image Hash]
-    S4 --> S5[5. Create Final Ad status: PAUSED]
-    
-    S5 --> SaveResult[Persist real IDs into ad_creation_runs table]
-    SaveResult --> RenderUI[UI renders verified IDs & displays live campaign explorer]
-    RenderUI --> End([Demo flow completed successfully])
-```
+<div align="center">
+  <img src="docs/assets/end-to-end-workflow.svg" alt="EZ-Ads Manager - End-to-End Business Workflow (16:9)" width="100%" />
+</div>
 
 ---
 
@@ -120,60 +69,9 @@ flowchart TD
 
 The backend synchronously coordinates five sequential calls against Meta Marketing API v20.0, handling currency conversion and isolating partial failures:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Demo Operator
-    participant UI as Next.js Client (:3000)
-    participant API as FastAPI Router (:8000)
-    participant AdSvc as AdCreationService
-    participant Meta as Meta Graph API (v20.0)
-    participant DB as SQLite (ad_creation_runs)
-
-    User->>UI: Click "Confirm & Create Ad"
-    UI->>API: POST /api/v1/ads (Payload specification)
-    API->>AdSvc: create_ad_pipeline(payload)
-    AdSvc->>DB: Insert run record (status: 'pending')
-
-    rect rgb(240, 248, 255)
-    Note over AdSvc, Meta: Step 1: Upload & Hash Product Image
-    AdSvc->>Meta: POST /act_{id}/adimages (url={image_url})
-    Meta-->>AdSvc: {"images": {"{url}": {"hash": "image_hash_123"}}}
-    end
-
-    rect rgb(245, 255, 245)
-    Note over AdSvc, Meta: Step 2: Create Campaign (OUTCOME_TRAFFIC)
-    AdSvc->>Meta: POST /act_{id}/campaigns (objective: OUTCOME_TRAFFIC, status: PAUSED)
-    Meta-->>AdSvc: {"id": "cmp_101"}
-    AdSvc->>DB: Update campaign_id = cmp_101
-    end
-
-    rect rgb(255, 250, 240)
-    Note over AdSvc, Meta: Step 3: Create Ad Set (Currency Multiplier)
-    Note over AdSvc: format_meta_budget: VND/JPY integer, USD/EUR x100
-    AdSvc->>Meta: POST /act_{id}/adsets (daily_budget, campaign_id, status: PAUSED)
-    Meta-->>AdSvc: {"id": "adset_202"}
-    AdSvc->>DB: Update adset_id = adset_202
-    end
-
-    rect rgb(255, 245, 255)
-    Note over AdSvc, Meta: Step 4: Create Ad Creative
-    AdSvc->>Meta: POST /act_{id}/adcreatives (page_id, image_hash, link_data)
-    Meta-->>AdSvc: {"id": "cre_303"}
-    AdSvc->>DB: Update creative_id = cre_303
-    end
-
-    rect rgb(240, 255, 255)
-    Note over AdSvc, Meta: Step 5: Finalize Ad Creation
-    AdSvc->>Meta: POST /act_{id}/ads (adset_id, creative_id, name, status: PAUSED)
-    Meta-->>AdSvc: {"id": "ad_404"}
-    AdSvc->>DB: Update ad_id = ad_404, status = 'success'
-    end
-
-    AdSvc-->>API: CreationResult (100% verified Meta IDs)
-    API-->>UI: HTTP 201 Created (Consistent Envelope)
-    UI->>User: Display Result Panel with real IDs and success badge
-```
+<div align="center">
+  <img src="docs/assets/sequential-creation-pipeline.svg" alt="EZ-Ads Manager - Sequential 5-Step Meta Creation Pipeline (16:9)" width="100%" />
+</div>
 
 ---
 
@@ -181,31 +79,9 @@ sequenceDiagram
 
 The internal SQLite schema is deliberately simplified to **2 independent tables** with automatic migration on startup:
 
-```mermaid
-erDiagram
-    META_SESSIONS {
-        int id PK "Fixed id=1 for the active session"
-        text access_token "User Access Token from Meta"
-        text token_type "Default 'bearer'"
-        int expires_at "UNIX expiry timestamp (nullable)"
-        datetime created_at "Session creation time"
-        datetime updated_at "Last update timestamp"
-    }
-
-    AD_CREATION_RUNS {
-        int id PK "Auto-incrementing primary key"
-        text ad_account_id "Target Ad Account ID (e.g., act_12345)"
-        text page_id "Selected Facebook Fanpage ID"
-        text campaign_id "Verified Campaign ID from Meta (nullable)"
-        text adset_id "Verified Ad Set ID from Meta (nullable)"
-        text creative_id "Verified Creative ID from Meta (nullable)"
-        text ad_id "Verified Ad ID from Meta (nullable)"
-        text status "State: pending / success / partial_failure / failed"
-        text request_summary "JSON summary of submitted form parameters"
-        text error_message "Sanitized error message if failed"
-        datetime created_at "Timestamp of execution"
-    }
-```
+<div align="center">
+  <img src="docs/assets/data-architecture-erd.svg" alt="EZ-Ads Manager - Data Architecture & Schema Specification (16:9)" width="100%" />
+</div>
 
 ---
 
@@ -233,7 +109,7 @@ erDiagram
 The repository enforces strict separation of concerns, maintaining complete isolation between Backend and Frontend environments:
 
 ```
-E:\MyProject\BAHA\
+ez-ads-manager/
 ├── backend/                           # FastAPI Application Root (Python)
 │   ├── app/
 │   │   ├── api/v1/endpoints/          # API Routers (/health, /meta_auth, /meta_assets, /ads)
@@ -389,17 +265,17 @@ Follow these steps to conduct an end-to-end demonstration verifying real-time Me
 
 1. **Step 1: Connect Meta Account**
    - Navigate to `http://localhost:3000`. The system will automatically check backend health and existing sessions.
-   - **Method A (Recommended for live customer demos)**: Open [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/), select your app, enable permissions (`ads_management`, `ads_read`, `pages_read_engagement`, `pages_manage_ads`, `public_profile`), and generate an Access Token. In the BAHA UI, click **"Nạp token trực tiếp từ Graph API Explorer"**, paste the `EAAB...` token, and click **Lưu phiên**.
+   - **Method A (Recommended for live customer demos)**: Open [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/), select your app, enable permissions (`ads_management`, `ads_read`, `pages_read_engagement`, `pages_manage_ads`, `public_profile`), and generate an Access Token. In the EZ-Ads UI, click **"Nạp token trực tiếp từ Graph API Explorer"**, paste the `EAAB...` token, and click **Lưu phiên**.
    - **Method B (Standard OAuth)**: Click **"Connect Facebook ngay"** to initiate the Facebook Login dialog.
 2. **Step 2: Select Ad Account & Fanpage**
    - Once connected, the app fetches all accessible assets from Meta.
-   - Select your target Ad Account (e.g., `act_120210...`) and your brand Fanpage (e.g., `BAHA Fashion`).
+   - Select your target Ad Account (e.g., `act_120210...`) and your brand Fanpage (e.g., `EZ Store`).
 3. **Step 3: Fill Product Ad Details**
    - Switch to the **"Tạo Quảng Cáo"** (Create Ad) tab.
    - Enter your campaign parameters:
-     - **Campaign Name**: `BAHA Summer Polo Campaign 2026`
+     - **Campaign Name**: `EZ-Ads Summer Traffic Campaign 2026`
      - **Image URL**: Direct public image URL from a CDN or e-commerce catalog.
-     - **Landing Page URL**: Product destination URL (e.g., `https://baha.vn/products/polo`).
+     - **Landing Page URL**: Product destination URL (e.g., `https://ezads.io/products/demo`).
      - **Headline**: `Premium Breathable Polo Shirt - 20% Off Today`
      - **Primary Text**: `4-way stretch fabric with anti-odor technology. Shop now for exclusive launch discounts!`
      - **Daily Budget**: `100,000` (for VND accounts) or `10` (for USD accounts).
@@ -574,5 +450,5 @@ This project is licensed under the **Apache License 2.0**. See the [LICENSE](LIC
 ---
 
 <div align="center">
-  <b>BAHA Ads Manager</b> — Engineered with pair-programming support from <b>Google Antigravity</b>
+  <b>EZ-Ads Manager</b> — Engineered with pair-programming support from <b>Google Antigravity</b>
 </div>

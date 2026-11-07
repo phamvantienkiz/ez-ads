@@ -1,0 +1,392 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;family=Instrument+Serif:ital@0;1&amp;display=swap');
+
+      text {
+        font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .font-serif {
+        font-family: 'Instrument Serif', Georgia, serif;
+      }
+      .font-mono {
+        font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+    </style>
+
+    <!-- Dot Matrix Pattern -->
+    <pattern id="erd-dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#4F5D75" fill-opacity="0.12" />
+    </pattern>
+
+    <!-- Arrow / Crowfoot Markers -->
+    <marker id="erd-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4F5D75" />
+    </marker>
+    <marker id="erd-arrow-coral" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#EB6C36" />
+    </marker>
+
+    <!-- Soft Drop Shadow -->
+    <filter id="erd-shadow" x="-4%" y="-3%" width="108%" height="108%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#111114" flood-opacity="0.04" />
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#111114" flood-opacity="0.03" />
+    </filter>
+  </defs>
+
+  <!-- ================= CANVAS BACKGROUND ================= -->
+  <rect width="1280" height="720" fill="#F8F9FB" />
+  <rect width="1280" height="720" fill="url(#erd-dots)" />
+
+  <!-- ================= HEADER SECTION ================= -->
+  <g transform="translate(48, 36)">
+    <text class="font-mono" x="0" y="0" font-size="11" font-weight="600" fill="#6E6E73" letter-spacing="0.14em">
+      EZ-ADS MANAGER · DATA ARCHITECTURE &amp; SCHEMA (ERD)
+    </text>
+    <text class="font-serif" x="0" y="32" font-size="28" font-weight="400" fill="#111114" letter-spacing="-0.02em">
+      2.4. Data Architecture &amp; Physical Schema Specification
+    </text>
+    <text x="0" y="54" font-size="13" font-weight="400" fill="#515465">
+      Zero-Config SQLite 3 WAL Mode Storage · Active Session Singleton &amp; Execution Audit Trail
+    </text>
+
+    <!-- Header Status Badges -->
+    <g transform="translate(980, 8)">
+      <rect x="0" y="0" width="114" height="24" rx="12" fill="#EBF8F0" stroke="#D1F2DD" stroke-width="1" />
+      <circle cx="12" cy="12" r="3.5" fill="#1FA63A" />
+      <text class="font-mono" x="22" y="15" font-size="10" font-weight="600" fill="#1FA63A">SQLite 3 WAL</text>
+    </g>
+    <g transform="translate(1104, 8)">
+      <rect x="0" y="0" width="80" height="24" rx="12" fill="#EFF4FF" stroke="#D0E1FD" stroke-width="1" />
+      <circle cx="12" cy="12" r="3.5" fill="#1F5FFF" />
+      <text class="font-mono" x="22" y="15" font-size="10" font-weight="600" fill="#1F5FFF">Auto DDL</text>
+    </g>
+  </g>
+
+  <!-- Divider Line -->
+  <line x1="48" y1="104" x2="1232" y2="104" stroke="#E2E4E9" stroke-width="1" />
+
+  <!-- ================= RELATIONSHIP CONNECTOR LINE (BACKGROUND) ================= -->
+  <g>
+    <!-- Straight Orthogonal Connector between meta_sessions and ad_creation_runs -->
+    <line x1="550" y1="210" x2="730" y2="210" stroke="#1F5FFF" stroke-width="2" marker-end="url(#erd-arrow)" />
+
+    <!-- Cardinality Labels -->
+    <text class="font-mono" x="562" y="202" font-size="11" font-weight="700" fill="#1F5FFF">1</text>
+    <text class="font-mono" x="712" y="202" font-size="11" font-weight="700" fill="#1F5FFF" text-anchor="end">0..*</text>
+
+    <!-- Relationship Label with Mask -->
+    <rect x="585" y="198" width="110" height="24" rx="4" fill="#FFFFFF" stroke="#D0E1FD" stroke-width="1" />
+    <text class="font-mono" x="640" y="214" font-size="9" font-weight="600" fill="#1F5FFF" text-anchor="middle">
+      authorizes runs
+    </text>
+  </g>
+
+  <!-- ================= TABLE 1: META_SESSIONS ================= -->
+  <g transform="translate(60, 126)">
+    <!-- Main Card Body -->
+    <rect width="490" height="394" rx="10" fill="#FFFFFF" stroke="#D0D5DD" stroke-width="1.2" filter="url(#erd-shadow)" />
+
+    <!-- Table Header Band -->
+    <rect width="490" height="40" rx="10" fill="#F4F4F6" stroke="#D0D5DD" stroke-width="0.8" />
+    <rect y="28" width="490" height="12" fill="#F4F4F6" />
+    <line x1="0" y1="40" x2="490" y2="40" stroke="#E2E4E9" stroke-width="1" />
+
+    <text class="font-mono" x="16" y="25" font-size="13" font-weight="700" fill="#111114">meta_sessions</text>
+    <rect x="145" y="11" width="94" height="18" rx="3" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="0.8" />
+    <text class="font-mono" x="151" y="23" font-size="8.5" font-weight="600" fill="#0369A1">SINGLETON (id=1)</text>
+
+    <text class="font-mono" x="474" y="24" font-size="9" fill="#6E6E73" text-anchor="end">TABLE</text>
+
+    <!-- Column Rows (8 rows, 26px height each) -->
+    <!-- Row 1: id -->
+    <g transform="translate(0, 40)">
+      <rect width="490" height="26" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="17" font-size="11" font-weight="600" fill="#111114">id</text>
+      <rect x="120" y="5" width="22" height="15" rx="2" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="0.8" />
+      <text class="font-mono" x="124" y="16" font-size="8" font-weight="700" fill="#1D4ED8">PK</text>
+      <text class="font-mono" x="320" y="17" font-size="10" fill="#4F5D75">INTEGER</text>
+      <text class="font-mono" x="474" y="17" font-size="9" fill="#6E6E73" text-anchor="end">Fixed id=1 (active)</text>
+      <line x1="0" y1="26" x2="490" y2="26" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 2: access_token -->
+    <g transform="translate(0, 66)">
+      <rect width="490" height="26" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="17" font-size="11" font-weight="600" fill="#111114">access_token</text>
+      <rect x="120" y="5" width="22" height="15" rx="2" fill="#FEE2E2" stroke="#FECACA" stroke-width="0.8" />
+      <text class="font-mono" x="124" y="16" font-size="8" font-weight="700" fill="#B91C1C">NN</text>
+      <text class="font-mono" x="320" y="17" font-size="10" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="17" font-size="9" fill="#6E6E73" text-anchor="end">User Bearer Token</text>
+      <line x1="0" y1="26" x2="490" y2="26" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 3: token_type -->
+    <g transform="translate(0, 92)">
+      <rect width="490" height="26" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="17" font-size="11" font-weight="500" fill="#111114">token_type</text>
+      <rect x="120" y="5" width="26" height="15" rx="2" fill="#F4F4F6" stroke="#E2E4E9" stroke-width="0.8" />
+      <text class="font-mono" x="124" y="16" font-size="8" font-weight="600" fill="#515465">DEF</text>
+      <text class="font-mono" x="320" y="17" font-size="10" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="17" font-size="9" fill="#6E6E73" text-anchor="end">'bearer'</text>
+      <line x1="0" y1="26" x2="490" y2="26" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 4: expires_at -->
+    <g transform="translate(0, 118)">
+      <rect width="490" height="26" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="17" font-size="11" font-weight="500" fill="#111114">expires_at</text>
+      <text class="font-mono" x="320" y="17" font-size="10" fill="#4F5D75">INTEGER</text>
+      <text class="font-mono" x="474" y="17" font-size="9" fill="#6E6E73" text-anchor="end">UNIX timestamp (null)</text>
+      <line x1="0" y1="26" x2="490" y2="26" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 5: app_id -->
+    <g transform="translate(0, 144)">
+      <rect width="490" height="26" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="17" font-size="11" font-weight="500" fill="#111114">app_id</text>
+      <text class="font-mono" x="320" y="17" font-size="10" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="17" font-size="9" fill="#6E6E73" text-anchor="end">Meta App ID (nullable)</text>
+      <line x1="0" y1="26" x2="490" y2="26" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 6: auth_mode -->
+    <g transform="translate(0, 170)">
+      <rect width="490" height="26" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="17" font-size="11" font-weight="500" fill="#111114">auth_mode</text>
+      <text class="font-mono" x="320" y="17" font-size="10" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="17" font-size="9" fill="#6E6E73" text-anchor="end">direct / implicit / code</text>
+      <line x1="0" y1="26" x2="490" y2="26" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 7: created_at -->
+    <g transform="translate(0, 196)">
+      <rect width="490" height="26" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="17" font-size="11" font-weight="500" fill="#111114">created_at</text>
+      <rect x="120" y="5" width="22" height="15" rx="2" fill="#FEE2E2" stroke="#FECACA" stroke-width="0.8" />
+      <text class="font-mono" x="124" y="16" font-size="8" font-weight="700" fill="#B91C1C">NN</text>
+      <text class="font-mono" x="320" y="17" font-size="10" fill="#4F5D75">DATETIME</text>
+      <text class="font-mono" x="474" y="17" font-size="9" fill="#6E6E73" text-anchor="end">Session init timestamp</text>
+      <line x1="0" y1="26" x2="490" y2="26" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 8: updated_at -->
+    <g transform="translate(0, 222)">
+      <rect width="490" height="26" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="17" font-size="11" font-weight="500" fill="#111114">updated_at</text>
+      <rect x="120" y="5" width="22" height="15" rx="2" fill="#FEE2E2" stroke="#FECACA" stroke-width="0.8" />
+      <text class="font-mono" x="124" y="16" font-size="8" font-weight="700" fill="#B91C1C">NN</text>
+      <text class="font-mono" x="320" y="17" font-size="10" fill="#4F5D75">DATETIME</text>
+      <text class="font-mono" x="474" y="17" font-size="9" fill="#6E6E73" text-anchor="end">Last token refresh time</text>
+      <line x1="0" y1="26" x2="490" y2="26" stroke="#E2E4E9" stroke-width="1" />
+    </g>
+
+    <!-- Index Compartment & Constraints -->
+    <g transform="translate(16, 260)">
+      <text class="font-mono" x="0" y="12" font-size="8.5" font-weight="700" fill="#6E6E73" letter-spacing="0.1em">INDEXES &amp; INVARIANTS</text>
+      <rect y="18" width="458" height="52" rx="6" fill="#F8F9FB" stroke="#EAEBED" stroke-width="0.8" />
+      <text class="font-mono" x="10" y="34" font-size="9" fill="#111114">• PRIMARY KEY: (id) → Fixed Singleton id=1</text>
+      <text class="font-mono" x="10" y="48" font-size="8.5" fill="#515465">• SECURITY: Token isolated locally; zero credential exposure</text>
+      <text class="font-mono" x="10" y="60" font-size="8.5" fill="#0284C7">• ACCESS LAYER: SessionRepository (session_repository.py)</text>
+    </g>
+  </g>
+
+  <!-- ================= TABLE 2: AD_CREATION_RUNS (FOCAL / ACCENT) ================= -->
+  <g transform="translate(730, 126)">
+    <!-- Main Card Body -->
+    <rect width="490" height="394" rx="10" fill="#FFFFFF" stroke="#EB6C36" stroke-width="1.8" filter="url(#erd-shadow)" />
+
+    <!-- Table Header Band (Accent Coral Tint) -->
+    <rect width="490" height="40" rx="10" fill="#FFF7ED" stroke="#FED7AA" stroke-width="0.8" />
+    <rect y="28" width="490" height="12" fill="#FFF7ED" />
+    <line x1="0" y1="40" x2="490" y2="40" stroke="#FED7AA" stroke-width="1" />
+
+    <text class="font-mono" x="16" y="25" font-size="13" font-weight="700" fill="#C2410C">ad_creation_runs</text>
+    <rect x="170" y="11" width="86" height="18" rx="3" fill="#EB6C36" />
+    <text class="font-mono" x="176" y="23" font-size="8.5" font-weight="700" fill="#FFFFFF">AUDIT TRAIL</text>
+
+    <text class="font-mono" x="474" y="24" font-size="9" fill="#9A3412" text-anchor="end">TABLE (FOCAL)</text>
+
+    <!-- Column Rows (11 rows, 20px - 22px height each) -->
+    <!-- Row 1: id -->
+    <g transform="translate(0, 40)">
+      <rect width="490" height="21" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="600" fill="#111114">id</text>
+      <rect x="140" y="3" width="36" height="14" rx="2" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#1D4ED8">PK · AI</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">INTEGER</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Auto-increment run ID</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 2: ad_account_id -->
+    <g transform="translate(0, 61)">
+      <rect width="490" height="21" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="600" fill="#111114">ad_account_id</text>
+      <rect x="140" y="3" width="22" height="14" rx="2" fill="#FEE2E2" stroke="#FECACA" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#B91C1C">NN</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Target Account: act_...</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 3: page_id -->
+    <g transform="translate(0, 82)">
+      <rect width="490" height="21" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="600" fill="#111114">page_id</text>
+      <rect x="140" y="3" width="22" height="14" rx="2" fill="#FEE2E2" stroke="#FECACA" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#B91C1C">NN</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Selected Fanpage ID</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 4: campaign_id -->
+    <g transform="translate(0, 103)">
+      <rect width="490" height="21" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="500" fill="#C2410C">campaign_id</text>
+      <rect x="140" y="3" width="30" height="14" rx="2" fill="#FFF7ED" stroke="#FED7AA" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#C2410C">META</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Live Campaign ID (Step 2)</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 5: adset_id -->
+    <g transform="translate(0, 124)">
+      <rect width="490" height="21" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="500" fill="#C2410C">adset_id</text>
+      <rect x="140" y="3" width="30" height="14" rx="2" fill="#FFF7ED" stroke="#FED7AA" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#C2410C">META</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Live Ad Set ID (Step 3)</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 6: creative_id -->
+    <g transform="translate(0, 145)">
+      <rect width="490" height="21" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="500" fill="#C2410C">creative_id</text>
+      <rect x="140" y="3" width="30" height="14" rx="2" fill="#FFF7ED" stroke="#FED7AA" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#C2410C">META</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Live Creative ID (Step 4)</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 7: ad_id -->
+    <g transform="translate(0, 166)">
+      <rect width="490" height="21" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="600" fill="#1FA63A">ad_id</text>
+      <rect x="140" y="3" width="30" height="14" rx="2" fill="#EBF8F0" stroke="#D1F2DD" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#1FA63A">META</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Final Ad ID (Step 5)</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 8: status -->
+    <g transform="translate(0, 187)">
+      <rect width="490" height="21" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="600" fill="#111114">status</text>
+      <rect x="140" y="3" width="22" height="14" rx="2" fill="#FEE2E2" stroke="#FECACA" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#B91C1C">NN</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">pending/success/partial</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 9: request_summary -->
+    <g transform="translate(0, 208)">
+      <rect width="490" height="21" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="500" fill="#111114">request_summary</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">JSON stringified payload</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 10: error_message -->
+    <g transform="translate(0, 229)">
+      <rect width="490" height="21" fill="#FFFFFF" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="500" fill="#B91C1C">error_message</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">TEXT</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Sanitized error on fail</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#F0F1F3" stroke-width="1" />
+    </g>
+
+    <!-- Row 11: created_at -->
+    <g transform="translate(0, 250)">
+      <rect width="490" height="21" fill="#F8F9FB" />
+      <text class="font-mono" x="16" y="15" font-size="10.5" font-weight="500" fill="#111114">created_at</text>
+      <rect x="140" y="3" width="22" height="14" rx="2" fill="#FEE2E2" stroke="#FECACA" stroke-width="0.8" />
+      <text class="font-mono" x="144" y="13" font-size="7.5" font-weight="700" fill="#B91C1C">NN</text>
+      <text class="font-mono" x="290" y="15" font-size="9.5" fill="#4F5D75">DATETIME</text>
+      <text class="font-mono" x="474" y="15" font-size="8.5" fill="#6E6E73" text-anchor="end">Execution start timestamp</text>
+      <line x1="0" y1="21" x2="490" y2="21" stroke="#FED7AA" stroke-width="1" />
+    </g>
+
+    <!-- Index Compartment & Constraints -->
+    <g transform="translate(16, 280)">
+      <text class="font-mono" x="0" y="12" font-size="8.5" font-weight="700" fill="#C2410C" letter-spacing="0.1em">INDEXES &amp; INVARIANTS</text>
+      <rect y="18" width="458" height="52" rx="6" fill="#FFFDFB" stroke="#FED7AA" stroke-width="0.8" />
+      <text class="font-mono" x="10" y="34" font-size="9" fill="#111114">• PRIMARY KEY: (id) AUTOINCREMENT</text>
+      <text class="font-mono" x="10" y="48" font-size="8.5" fill="#515465">• PARTIAL RECOVERY: Preserves upstream IDs if step fails</text>
+      <text class="font-mono" x="10" y="60" font-size="8.5" fill="#C2410C">• ACCESS LAYER: RunRepository (run_repository.py)</text>
+    </g>
+  </g>
+
+  <!-- ================= BOTTOM 3 ARCHITECTURAL INVARIANT BOXES ================= -->
+  <!-- Box 1: WAL Mode Persistence -->
+  <g transform="translate(60, 540)">
+    <rect width="364" height="106" rx="8" fill="#FFFFFF" stroke="#D0D5DD" stroke-width="1" filter="url(#erd-shadow)" />
+    <text class="font-mono" x="16" y="24" font-size="11" font-weight="700" fill="#111114">⚙️ WAL Mode Persistence</text>
+    <text class="font-mono" x="16" y="42" font-size="9.5" font-weight="600" fill="#0284C7">PRAGMA journal_mode = WAL</text>
+    <text class="font-mono" x="16" y="58" font-size="8.5" fill="#515465">• Database file: baha_ads_manager.db</text>
+    <text class="font-mono" x="16" y="72" font-size="8.5" fill="#515465">• Concurrent non-blocking read &amp; write</text>
+    <text class="font-mono" x="16" y="86" font-size="8.5" fill="#515465">• aiosqlite asynchronous SQL driver</text>
+  </g>
+
+  <!-- Box 2: Zero-Config Auto-DDL -->
+  <g transform="translate(458, 540)">
+    <rect width="364" height="106" rx="8" fill="#FFFFFF" stroke="#D0D5DD" stroke-width="1" filter="url(#erd-shadow)" />
+    <text class="font-mono" x="16" y="24" font-size="11" font-weight="700" fill="#111114">🚀 Zero-Config Auto DDL</text>
+    <text class="font-mono" x="16" y="42" font-size="9.5" font-weight="600" fill="#1FA63A">Automatic Startup Initialization</text>
+    <text class="font-mono" x="16" y="58" font-size="8.5" fill="#515465">• Engine: app/core/database.py</text>
+    <text class="font-mono" x="16" y="72" font-size="8.5" fill="#515465">• IF NOT EXISTS table creation</text>
+    <text class="font-mono" x="16" y="86" font-size="8.5" fill="#515465">• No external database server required</text>
+  </g>
+
+  <!-- Box 3: Partial Failure Resilience -->
+  <g transform="translate(856, 540)">
+    <rect width="364" height="106" rx="8" fill="#FFFDFB" stroke="#FED7AA" stroke-width="1.2" filter="url(#erd-shadow)" />
+    <text class="font-mono" x="16" y="24" font-size="11" font-weight="700" fill="#C2410C">🛡️ Partial Failure Resilience</text>
+    <text class="font-mono" x="16" y="42" font-size="9.5" font-weight="600" fill="#EB6C36">Intermediate ID Preservation</text>
+    <text class="font-mono" x="16" y="58" font-size="8.5" fill="#515465">• Tracks each stage state progressively</text>
+    <text class="font-mono" x="16" y="72" font-size="8.5" fill="#515465">• Preserves created IDs upon API failure</text>
+    <text class="font-mono" x="16" y="86" font-size="8.5" fill="#C2410C">• Avoids duplicate ad costs during retry</text>
+  </g>
+
+  <!-- ================= FOOTER / LEGEND BAR ================= -->
+  <g transform="translate(48, 688)">
+    <rect x="0" y="0" width="12" height="12" rx="3" fill="#111114" />
+    <text class="font-mono" x="18" y="10" font-size="9" fill="#515465">Physical Table Box</text>
+
+    <rect x="150" y="0" width="12" height="12" rx="3" fill="#1F5FFF" />
+    <text class="font-mono" x="168" y="10" font-size="9" fill="#515465">Primary Key &amp; Foreign Relationship</text>
+
+    <rect x="390" y="0" width="12" height="12" rx="3" fill="#EB6C36" />
+    <text class="font-mono" x="408" y="10" font-size="9" fill="#515465">Focal Audit Table (ad_creation_runs)</text>
+
+    <rect x="650" y="0" width="12" height="12" rx="3" fill="#B91C1C" />
+    <text class="font-mono" x="668" y="10" font-size="9" fill="#515465">NOT NULL (NN) Constraint</text>
+
+    <rect x="850" y="0" width="12" height="12" rx="3" fill="#1FA63A" />
+    <text class="font-mono" x="868" y="10" font-size="9" fill="#515465">Final Success Resource ID</text>
+
+    <!-- Right side ratio indicator -->
+    <text class="font-mono" x="1184" y="10" font-size="9.5" font-weight="600" fill="#6E6E73" text-anchor="end">
+      16:9 Aspect Ratio · 1280 × 720 px
+    </text>
+  </g>
+</svg>
