@@ -30,7 +30,7 @@ export function ConnectCard({
     if (currentAppId) {
       setAppIdInput(currentAppId);
     } else if (typeof window !== 'undefined') {
-      const saved = window.localStorage.getItem('baha_meta_app_id');
+      const saved = window.localStorage.getItem('ezads_meta_app_id') || window.localStorage.getItem('baha_meta_app_id');
       if (saved) setAppIdInput(saved);
     }
   }, [currentAppId]);
@@ -38,7 +38,7 @@ export function ConnectCard({
   const handleConnectClick = () => {
     const trimmed = appIdInput.trim();
     if (trimmed && typeof window !== 'undefined') {
-      window.localStorage.setItem('baha_meta_app_id', trimmed);
+      window.localStorage.setItem('ezads_meta_app_id', trimmed);
     }
     onConnect(trimmed || undefined);
   };
@@ -93,7 +93,7 @@ export function ConnectCard({
               </span>
             </div>
             <p className="text-[13px] text-muted mt-1 max-w-2xl">
-              Nhập <strong>ID ứng dụng (Meta App ID)</strong> của tài khoản BAHA rồi bấm <strong>Connect Facebook ngay</strong>. Hệ thống sử dụng cơ chế <code className="text-primary font-mono text-[12px] bg-subtle px-1 rounded">response_type=token</code> nên không yêu cầu khóa bí mật (App Secret).
+              Nhập <strong>ID ứng dụng (Meta App ID)</strong> của bạn rồi bấm <strong>Connect Facebook ngay</strong>. Hệ thống sử dụng cơ chế <code className="text-primary font-mono text-[12px] bg-subtle px-1 rounded">response_type=token</code> nên không yêu cầu khóa bí mật (App Secret).
             </p>
           </div>
         </div>

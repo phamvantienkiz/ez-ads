@@ -1,5 +1,5 @@
 /**
- * Shared TypeScript interfaces for BAHA Ads Manager
+ * Shared TypeScript interfaces for EZ-Ads Manager
  * Grounded on docs/implementation/release-1/api/v1.md
  */
 
@@ -37,14 +37,14 @@ export interface MetaSessionStatus {
 export interface AdAccount {
   id: string;          // e.g. "act_1234567890"
   accountId: string;   // e.g. "1234567890"
-  name: string;        // e.g. "BAHA Commerce Account"
+  name: string;        // e.g. "EZ-Ads Business Account"
   currency: string;    // e.g. "VND" or "USD"
   accountStatus: number;
 }
 
 export interface FacebookPage {
   id: string;          // e.g. "100200300400"
-  name: string;        // e.g. "BAHA Fashion Store"
+  name: string;        // e.g. "EZ Store"
   category?: string;   // e.g. "Clothing Store"
 }
 

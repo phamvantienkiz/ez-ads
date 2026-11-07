@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'BAHA Ads Manager — Meta Marketing Automation',
-  description: 'Trình điều phối & Tạo quảng cáo Meta chính thức cho BAHA',
+  title: 'EZ-Ads Manager — Meta Marketing Automation',
+  description: 'Trình điều phối & Tạo quảng cáo Meta chính thức cho EZ-Ads',
 };
 
 export default function RootLayout({

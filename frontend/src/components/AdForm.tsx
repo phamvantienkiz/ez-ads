@@ -118,7 +118,7 @@ export function AdForm({
           type="text"
           value={initialValues.campaignName}
           onChange={(e) => handleChange('campaignName', e.target.value)}
-          placeholder="Ví dụ: BAHA Polo Shirt Traffic Campaign"
+          placeholder="Ví dụ: EZ-Ads Traffic Demo Campaign"
           disabled={isSubmitting}
           className="bg-subtle hover:bg-[#ECECEF] focus:bg-white text-primary text-[14px] rounded-xl px-3.5 py-2.5 border border-transparent focus:border-border-card focus:outline-none transition-all placeholder:text-muted-soft"
         />
@@ -160,7 +160,7 @@ export function AdForm({
           type="text"
           value={initialValues.headline}
           onChange={(e) => handleChange('headline', e.target.value)}
-          placeholder="Ví dụ: Áo Polo Nam Cao Cấp BAHA"
+          placeholder="Ví dụ: EZ-Ads — Giải Pháp Tự Động Hóa Quảng Cáo"
           disabled={isSubmitting}
           className="bg-subtle hover:bg-[#ECECEF] focus:bg-white text-primary text-[14px] rounded-xl px-3.5 py-2.5 border border-transparent focus:border-border-card focus:outline-none transition-all placeholder:text-muted-soft"
         />
@@ -175,7 +175,7 @@ export function AdForm({
           rows={3}
           value={initialValues.primaryText}
           onChange={(e) => handleChange('primaryText', e.target.value)}
-          placeholder="Trải nghiệm dòng áo Polo nam cao cấp từ BAHA với chất liệu thoáng mát vượt trội..."
+          placeholder="Trải nghiệm nền tảng tự động hóa quảng cáo thông minh cùng EZ-Ads với hiệu suất vượt trội..."
           disabled={isSubmitting}
           className="bg-subtle hover:bg-[#ECECEF] focus:bg-white text-primary text-[14px] rounded-xl px-3.5 py-2.5 border border-transparent focus:border-border-card focus:outline-none transition-all placeholder:text-muted-soft resize-none"
         />
@@ -190,7 +190,7 @@ export function AdForm({
           type="url"
           value={initialValues.destinationUrl}
           onChange={(e) => handleChange('destinationUrl', e.target.value)}
-          placeholder="https://baha.vn/products/polo-classic"
+          placeholder="https://ezads.io/demo"
           disabled={isSubmitting}
           className="bg-subtle hover:bg-[#ECECEF] focus:bg-white text-primary text-[14px] rounded-xl px-3.5 py-2.5 border border-transparent focus:border-border-card focus:outline-none transition-all placeholder:text-muted-soft"
         />

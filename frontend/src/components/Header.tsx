@@ -22,13 +22,13 @@ export function Header({
     <header className="bg-white rounded-card border border-border-card px-6 py-4 shadow-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       {/* Brand & Identity */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-ink flex items-center justify-center text-white font-bold text-lg shadow-sm">
-          B
+        <div className="w-10 h-10 rounded-2xl bg-ink flex items-center justify-center text-white font-black text-sm tracking-tight shadow-sm">
+          EZ
         </div>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-[17px] font-semibold text-primary tracking-tight">
-              BAHA Ads Manager
+              EZ-Ads Manager
             </h1>
             <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-subtle text-muted border border-border-hairline">
               Meta API v20.0

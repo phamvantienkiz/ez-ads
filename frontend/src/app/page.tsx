@@ -57,11 +57,11 @@ export default function Home() {
   const [formData, setFormData] = useState<CreateAdPayload>({
     adAccountId: '',
     pageId: '',
-    campaignName: 'BAHA Polo Shirt Traffic Campaign',
+    campaignName: 'EZ-Ads Traffic Demo Campaign',
     budgetAmount: 50000,
-    primaryText: 'Trải nghiệm dòng áo Polo nam cao cấp từ BAHA với chất liệu thoáng mát vượt trội, độ bền cao và kiểu dáng hiện đại cho mọi dịp.',
-    headline: 'Áo Polo Nam Cao Cấp BAHA — Ưu Đãi 20%',
-    destinationUrl: 'https://baha.vn/products/polo-classic',
+    primaryText: 'Trải nghiệm nền tảng tự động hóa quảng cáo thông minh cùng EZ-Ads, tối ưu chi phí và bứt phá hiệu suất chuyển đổi vượt trội.',
+    headline: 'EZ-Ads — Tự Động Hóa Quảng Cáo Meta Đột Phá',
+    destinationUrl: 'https://ezads.io/demo',
     imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800',
   });
 
@@ -223,14 +223,18 @@ export default function Home() {
     setGlobalError(null);
     const resolvedAppId =
       appIdOverride ||
-      (typeof window !== 'undefined' ? window.localStorage.getItem('baha_meta_app_id') || undefined : undefined);
+      (typeof window !== 'undefined'
+        ? window.localStorage.getItem('ezads_meta_app_id') ||
+          window.localStorage.getItem('baha_meta_app_id') ||
+          undefined
+        : undefined);
 
     try {
       const res = await api.getMetaConnectUrl(resolvedAppId);
       if (res.success && res.data?.authUrl) {
         if (res.data.appIdConfigured === false) {
           setGlobalError(
-            'Chưa có Meta App ID hợp lệ! Vui lòng dán mã số App ID của tài khoản BAHA vào ô "Nhập Meta App ID" bên dưới rồi bấm Connect Facebook ngay.'
+            'Chưa có Meta App ID hợp lệ! Vui lòng dán mã số App ID vào ô "Nhập Meta App ID" bên dưới rồi bấm Connect Facebook ngay.'
           );
           return;
         }
@@ -605,7 +609,7 @@ export default function Home() {
             {/* Right Column: Sticky Live Preview */}
             <div className="lg:col-span-5 lg:sticky lg:top-8 flex flex-col gap-4">
               <AdPreviewCard
-                pageName={selectedPage?.name || 'BAHA Fashion Store'}
+                pageName={selectedPage?.name || 'EZ Store'}
                 primaryText={formData.primaryText}
                 headline={formData.headline}
                 destinationUrl={formData.destinationUrl}
@@ -629,7 +633,7 @@ export default function Home() {
 
       {/* Footer Info */}
       <footer className="text-center py-4 text-[12px] text-muted-soft">
-        BAHA Ads Manager · MVP Architecture Release 1 · Soft Clean Cards
+        EZ-Ads Manager · Open Source Showcase · Soft Clean Cards
       </footer>
     </main>
   );

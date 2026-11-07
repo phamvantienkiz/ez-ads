@@ -21,17 +21,17 @@ export function AdPreviewCard({
   const [imageError, setImageError] = useState(false);
 
   // Extract clean domain from destinationUrl
-  let domain = 'baha.vn';
+  let domain = 'ezads.io';
   try {
     if (destinationUrl) {
       const parsed = new URL(destinationUrl.startsWith('http') ? destinationUrl : `https://${destinationUrl}`);
       domain = parsed.hostname.replace('www.', '');
     }
   } catch {
-    domain = 'baha.vn';
+    domain = 'ezads.io';
   }
 
-  const initial = pageName ? pageName.trim().charAt(0).toUpperCase() : 'B';
+  const initial = pageName ? pageName.trim().charAt(0).toUpperCase() : 'E';
 
   return (
     <div className="bg-subtle rounded-2xl p-5 border border-border-hairline flex flex-col gap-3.5 w-full">
