@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BAHA Ads Manager — 2-Hour MVP Engineering Showcase</title>
+  <title>EZ-Ads Manager — 2-Hour MVP Engineering Showcase</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -699,9 +699,9 @@
     <!-- Sticky Header & Slide Segmented Control -->
     <header class="top-bar">
       <div class="brand-group">
-        <div class="brand-logo">B</div>
+        <div class="brand-logo">EZ</div>
         <div class="brand-title">
-          <h1>BAHA Ads Manager — 2-Hour MVP Report</h1>
+          <h1>EZ-Ads Manager — 2-Hour MVP Report</h1>
           <p>AI-Software Engineering Approach · Meta Marketing API v20.0</p>
         </div>
       </div>
@@ -819,7 +819,7 @@
             </div>
             <span class="wf-skill-tag">/grill-me + product-requirements</span>
             <h4>Phản biện & Chốt Yêu cầu</h4>
-            <p>Phân tích file <code class="mono">BAHA_Ads_Manager_MVP_Requirements.md</code>, phát hiện và khóa 6 điểm mù kỹ thuật (D-01 &rarr; D-06).</p>
+            <p>Phân tích tài liệu yêu cầu MVP, phát hiện và khóa 6 điểm mù kỹ thuật (D-01 &rarr; D-06).</p>
           </div>
 
           <div class="wf-node">
@@ -859,7 +859,7 @@
             </div>
             <span class="wf-skill-tag">Live Integration & Adaptation</span>
             <h4>Thích ứng & Kết nối Meta thật</h4>
-            <p>Vượt rào cản thiếu mật khẩu App Secret bằng Dual-Mode Auth & kết nối thành công tài khoản BAHA.</p>
+            <p>Vượt rào cản thiếu mật khẩu App Secret bằng Dual-Mode Auth & kết nối thành công tài khoản Meta thật.</p>
           </div>
         </div>
 
@@ -987,7 +987,7 @@
                 <strong>Service Layer & Safety Lock</strong>
                 <span>asyncio.Lock · Sanitize Token Logs</span>
               </div>
-              <div class="arch-item" onclick="inspectNode(this, 'Repository Layer & SQLite (baha_ads.db): Lưu trữ an toàn Access Token tại bảng meta_sessions (id=1) và nhật ký chạy tại bảng ad_creation_runs.')">
+              <div class="arch-item" onclick="inspectNode(this, 'Repository Layer & SQLite: Lưu trữ an toàn Access Token tại bảng meta_sessions (id=1) và nhật ký chạy tại bảng ad_creation_runs.')">
                 <strong>SQLite Local Persistence</strong>
                 <span>Bảng <code class="mono">meta_sessions</code> & <code class="mono">ad_creation_runs</code></span>
               </div>
@@ -1073,7 +1073,7 @@
         <div class="slide-header">
           <div>
             <span class="slide-eyebrow">Slide 04 · Real-World Problem Solving</span>
-            <h2 class="slide-title">Giải Bài Toán Kết Nối Thực Tế Trên Tài Khoản BAHA</h2>
+            <h2 class="slide-title">Giải Bài Toán Kết Nối Thực Tế Với Meta API</h2>
             <p class="slide-subtitle">
               Phân tích nguyên nhân và cách xử lý linh hoạt khi tích hợp với tài khoản Meta của khách hàng trong điều kiện không được cấp mật khẩu cá nhân để mở khóa <code class="mono">META_APP_SECRET</code>.
             </p>
@@ -1091,11 +1091,11 @@
             <ul class="check-list" style="margin-top: 4px;">
               <li class="check-item">
                 <span class="check-icon" style="background: var(--pink-bg); color: var(--pink-text);">1</span>
-                <span><strong>Lỗi "ID ứng dụng không hợp lệ":</strong> File <code class="mono">.env</code> ban đầu chứa giá trị mẫu (<code class="mono">test_meta_app_id</code>), cần thay bằng dãy số <code class="mono">Meta App ID</code> thật trên tài khoản BAHA.</span>
+                <span><strong>Lỗi "ID ứng dụng không hợp lệ":</strong> File <code class="mono">.env</code> ban đầu chứa giá trị mẫu (<code class="mono">test_meta_app_id</code>), cần thay bằng dãy số <code class="mono">Meta App ID</code> thật của tài khoản quản trị.</span>
               </li>
               <li class="check-item">
                 <span class="check-icon" style="background: var(--pink-bg); color: var(--pink-text);">2</span>
-                <span><strong>Không thể lấy <code class="mono">META_APP_SECRET</code>:</strong> Trên <code class="mono">developers.facebook.com</code>, nút "Hiển thị" khóa bảo mật luôn yêu cầu nhập lại mật khẩu Facebook của chủ tài khoản BAHA.</span>
+                <span><strong>Không thể lấy <code class="mono">META_APP_SECRET</code>:</strong> Trên <code class="mono">developers.facebook.com</code>, nút "Hiển thị" khóa bảo mật luôn yêu cầu nhập lại mật khẩu Facebook của chủ tài khoản.</span>
               </li>
               <li class="check-item">
                 <span class="check-icon" style="background: var(--pink-bg); color: var(--pink-text);">3</span>
@@ -1118,7 +1118,7 @@
               </li>
               <li class="check-item">
                 <span class="check-icon check-done">✓</span>
-                <span><strong>Kết quả thực tế:</strong> Đã kết nối thành công vào phiên SQLite (<code class="mono">Connected</code>), xác thực với Meta Graph API và tải được toàn bộ thông tin tài khoản của BAHA.</span>
+                <span><strong>Kết quả thực tế:</strong> Đã kết nối thành công vào phiên SQLite (<code class="mono">Connected</code>), xác thực với Meta Graph API và tải được toàn bộ thông tin tài khoản quảng cáo.</span>
               </li>
             </ul>
           </div>
@@ -1126,7 +1126,7 @@
 
         <!-- Comparison of 3 Auth Modes -->
         <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">
-          Ma trận 3 Chế độ Kết nối đã được hỗ trợ sẵn trong BAHA Ads Manager
+          Ma trận 3 Chế độ Kết nối đã được hỗ trợ sẵn trong EZ-Ads Manager
         </h3>
         <div style="overflow-x: auto;">
           <table class="clean-table">
@@ -1266,7 +1266,7 @@
               Xem Swagger API (:8000/docs) ↗
             </a>
             <a href="http://localhost:3000" target="_blank" class="btn-live-app" style="background: var(--meta-blue);">
-              Mở Ứng dụng BAHA Ads Manager (:3000) ↗
+              Mở Ứng dụng EZ-Ads Manager (:3000) ↗
             </a>
           </div>
         </div>
@@ -1276,7 +1276,7 @@
     <!-- Footer Slide Controls -->
     <footer class="deck-footer">
       <div>
-        <span>BAHA Ads Manager · 2-Hour MVP Engineering Showcase</span>
+        <span>EZ-Ads Manager · 2-Hour MVP Engineering Showcase</span>
         <span style="margin: 0 8px;">·</span>
         <span id="slideCounterText" class="mono">Slide 1 / 5</span>
       </div>
